@@ -1,0 +1,5 @@
+# ignore all backup-files
+__pycache__/
+
+# ignore all style-check-files
+.pylint.d/
