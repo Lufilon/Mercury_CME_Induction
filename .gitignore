@@ -48,3 +48,9 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# Custom files
+plots/
+KTH_Model_V7/data/
+KTH_Model_V7/plots/
+
