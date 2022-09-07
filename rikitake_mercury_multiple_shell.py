@@ -1,3 +1,6 @@
+"""
+Dokumentation einfügen
+"""
 import matplotlib.pyplot as plt
 from rikitake import rikitake
 from numpy import pi, sqrt, real, log10, arange, array

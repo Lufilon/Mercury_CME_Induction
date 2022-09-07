@@ -1,5 +1,6 @@
 """
-Frage: An welcher Stelle lÃ¤sst man die negativen Frequenzen raus?
+Was genau macht das Programm und warum braucht man das? Der rebuild muss ja nur
+noch da sein, falls in der Herleitung zu dem Programm gezeigt, dass es möglich ist
 """
 from numpy.fft import fft, fftfreq, ifft
 import numpy as np
@@ -12,11 +13,6 @@ def data():
     # asymmetric gaussian
     height = 1
     data = height * skewnorm.pdf(t, a=2, loc=t[int(N/2)])
-
-    # rectangular pulse
-    # data = [0 for i in range(0, int((4096 - 2000)/2))]
-    # data = np.append(data, [1 for i in range(2000)])
-    # data = np.append(data, [0 for i in range(0, int((4096 - 2000)/2))])
 
     # add noise to the signal
     # noise_power = 1E-4
@@ -60,14 +56,16 @@ def rebuild(fft_own):
     # ax.set_title(" (data_init-rebuild) for height=5, a=5, t1-t0=100")
     ax.legend()
 
-
+# =============================================================================
+# parameters -> soon to be value imported from file
+# =============================================================================
 t0 = 0
 t1 = 10
 N = 4096
 t = np.linspace(t0, t1, int(N))
 dt = (t1 - t0) / N
 
-threshold = 0.01
+threshold = 0.01  # determines the number of frequencies used for the rebuild
 
 data_init = data()
 fft_init = fft_own(data_init)

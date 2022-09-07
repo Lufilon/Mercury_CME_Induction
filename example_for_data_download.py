@@ -1,3 +1,7 @@
+"""
+Simple way of getting data from the amda database using speasy.
+Further work is required here.
+"""
 import speasy as spz
 ace_mag = spz.get_data('amda/imf', "2016-6-2", "2016-6-5")
 

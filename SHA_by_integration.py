@@ -1,19 +1,65 @@
-from numpy import sin, cos, tan, sqrt, pi
-from numpy import zeros, arange, meshgrid
+"""
+Dokumentation einfuegen
+"""
 from math import factorial
+from numpy import sin, cos, tan, sqrt, pi
+from numpy import zeros, linspace, meshgrid, asarray, ravel
 from scipy.special import lpmv
 from scipy.integrate import simpson
+import matplotlib.pyplot as plt
+import pyshtools.legendre as leg
+from pyshtools.legendre import PlmIndex as legind
 
 
 def a_lm(l, m):
     if l <= 0:
         return 0
-    else:
-        return l * (m - l - 1) / (2 * l + 1)
+    return l * (m - l - 1) / (2 * l + 1)
 
 
 def b_lm(l, m):
     return (l + 1) * (l + m) / (2 * l + 1)
+
+
+def calcLegPol(lmax, theta_arr, csph=False):
+    """
+    This function computes the associated Legendre polynomials and their
+    derivatives with respect to the colatitude for a given maximal spherical
+    harmonic degree and a given colatitude. Here the shtools library
+    (https://shtools.oca.eu) is used for the calculations. shtools calculates
+    the Legendre polynomials with respect to a variable z, which is chosen to
+    be z=cos(theta) in this case. Therefore also a correction is needed for
+    the derivative.
+
+    Parameters
+    ----------
+    lmax : int
+        maximal spherical harmonic degree for the calculation.
+    theta : float
+        colatidude in radian.
+    csph: bool, optional
+        Usage of a Condon-Shortley phase. If True then the CS phase is
+        included. Default is False.
+
+    Returns
+    --------
+    Plm : float
+        Array with all Legendre polynimals of degree and order (l,m) = lmax
+        for the given colatitude
+    dPlm : float
+        Array with the corresponding derivatives of Plm with respect to the
+        colatitude
+
+    """
+    if csph:
+        cs = -1
+    else:
+        cs = 1
+
+    Plm, dPlm = leg.PlmSchmidt_d1(lmax, cos(theta_arr), csphase=cs)
+    dPlm *= -sin(theta_arr)
+
+    return Plm, dPlm
 
 
 def P(l, m, x):
@@ -99,16 +145,10 @@ def SHA_by_integration(br, bp, bt, ana_radius, ref_radius, theta_arr, phi_arr,
                 GT_lm[l] = - (V_lm_arr[l-1] - a_lm(l-2, m) / b_lm(l-2, m)
                                 * V_lm_arr[l-3]) / b_lm(l, m)
 
-        # print("V_lm", V_lm_arr[0])
-        # print("GT_lm[1] ", GT_lm[1])
-        # print("GR_lm_arr[1] ", GR_lm_arr[1])
-
         # finally calculate the actual gauss coefficients
         for l in range(m, degree_max + 1):
             coeff_int[l] = 1/(2*l + 1) * (ana_radius/ref_radius)**(l+2) * (GR_lm_arr[l] - l * GT_lm[l])
             coeff_ext[l] = -1/(2*l + 1) * (ref_radius/ana_radius)**(l-1) * (GR_lm_arr[l] + (l+1) * GT_lm[l])
-
-        # print("G_theta[1]", GT_lm[1])
 
     else:  # m > 0
         # analysis of the B_phi component  # (2.45)
@@ -123,7 +163,7 @@ def SHA_by_integration(br, bp, bt, ana_radius, ref_radius, theta_arr, phi_arr,
             int_result = simpson(integrand_p * sin(m * phi_arr), phi_arr)
             # if l == 1:
                 # print("GP_int-result", int_result)
-            
+
             GP_lm_arr[l] = (2*l + 1)/(4*pi) * int_result
 
         # calculate the gauss coefficients  # (2.46)
@@ -142,70 +182,80 @@ def SHA_by_integration(br, bp, bt, ana_radius, ref_radius, theta_arr, phi_arr,
 n_theta = int(200)
 n_phi = int(2 * n_theta)
 
-theta_arr = arange(1E-4, pi, pi/n_theta)  # wegen 1/sin(x) -> nicht bei 0 beginn
-phi_arr = arange(1E-4, 2*pi, 2*pi/n_phi)  # kann später vermutlich geändert werden
+# theta_arr = linspace(1E-4, pi, n_theta, endpoint=False)
+# phi_arr = linspace(1E-4, 2*pi, n_phi, endpoint=False)
+# =============================================================================
+# temp
+# =============================================================================
+phi_arr = linspace(1E-4, 2*pi, n_phi, endpoint=False)
+theta_arr = linspace(1E-4, pi, n_theta, endpoint=False)
+# =============================================================================
+# temp
+# =============================================================================
 phi_arr_2D, theta_arr_2D = meshgrid(phi_arr, theta_arr)
 
 # =============================================================================
 # generating the internal test magnetic field
 # =============================================================================
-g_1_0_int, g_1_1_int = 10, 20
-h_1_1_int = 30
-g_2_0_int, g_2_1_int, g_2_2_int = 40, 50, 60
-h_2_1_int, h_2_2_int = 70, 80
+def dP(l, m, theta_arr_2D):
+    theta_temp = ravel(theta_arr_2D)
+    return asarray([calcLegPol(3, theta)[1][legind(l, m)] for theta in theta_temp]).reshape(n_theta, n_phi)
+g_1_0_int, g_1_1_int = -192, 2.6
+h_1_1_int = 0.1
+g_2_0_int, g_2_1_int, g_2_2_int = -78, -2, 0
+h_2_1_int, h_2_2_int = 0, -1
 
 br, bp, bt = 0, 0, 0
 # case l=1, m=0
-br += 2 * g_1_0_int * cos(theta_arr_2D)
+br += 2 * g_1_0_int * P(1, 0, cos(theta_arr_2D))
 bp += 0
-bt += g_1_0_int * sin(theta_arr_2D)
+bt += - g_1_0_int * dP(1, 0, theta_arr_2D)
 # case l=1, m=1
-br += 2 * (g_1_1_int*cos(1*phi_arr_2D) + h_1_1_int*sin(1*phi_arr_2D)) * cos(theta_arr_2D)
-bp += (g_1_1_int*sin(1*phi_arr_2D) - h_1_1_int*cos(1*phi_arr_2D)) * 1/tan(theta_arr_2D)
-bt += (g_1_1_int*cos(1*phi_arr_2D) + h_1_1_int*sin(1*phi_arr_2D)) * sin(theta_arr_2D)
+br += 2 * (g_1_1_int*cos(1*phi_arr_2D) + h_1_1_int*sin(1*phi_arr_2D)) * P(1, 1, cos(theta_arr_2D))
+bp += (g_1_1_int*sin(1*phi_arr_2D) - h_1_1_int*cos(1*phi_arr_2D)) * P(1, 1, cos(theta_arr_2D))/sin(theta_arr_2D)
+bt += - (g_1_1_int*cos(1*phi_arr_2D) + h_1_1_int*sin(1*phi_arr_2D)) * dP(1, 1, theta_arr_2D)
 # case l=2, m=0
-br += 3 * g_2_0_int * (3 * cos(theta_arr_2D)**2 - 1)/2
+br += 3 * g_2_0_int * P(2, 0, cos(theta_arr_2D))
 bp += 0
-bt += g_2_0_int * (3 * cos(theta_arr_2D) * sin(theta_arr_2D))   
+bt += - g_2_0_int * dP(2, 0, theta_arr_2D)
 # case l=2, m=1
-br += 3 * (g_2_1_int*cos(1*phi_arr_2D) + h_2_1_int*sin(1*phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/2
-bp += (g_2_1_int*sin(1*phi_arr_2D) - h_2_1_int*cos(1*phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/(2*sin(theta_arr_2D))
-bt += (g_2_1_int*cos(1*phi_arr_2D) + h_2_1_int*sin(1*phi_arr_2D)) * (3 * cos(theta_arr_2D) * sin(theta_arr_2D))
+br += 3 * (g_2_1_int*cos(1*phi_arr_2D) + h_2_1_int*sin(1*phi_arr_2D)) * P(2, 1, cos(theta_arr_2D))
+bp += (g_2_1_int*sin(1*phi_arr_2D) - h_2_1_int*cos(1*phi_arr_2D)) * P(2, 1, cos(theta_arr_2D))/sin(theta_arr_2D)
+bt += - (g_2_1_int*cos(1*phi_arr_2D) + h_2_1_int*sin(1*phi_arr_2D)) * dP(2, 1, theta_arr_2D)
 # case l=2, m=2
-br += 3 * (g_2_2_int*cos(2*phi_arr_2D) + h_2_2_int*sin(2*phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/2
-bp += 2 * (g_2_2_int*sin(2*phi_arr_2D) - h_2_2_int*cos(2*phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/(2*sin(theta_arr_2D))
-bt += (g_2_2_int*cos(2*phi_arr_2D) + h_2_2_int*sin(2*phi_arr_2D)) * (3 * cos(theta_arr_2D) * sin(theta_arr_2D))
-
+br += 3 * (g_2_2_int*cos(2*phi_arr_2D) + h_2_2_int*sin(2*phi_arr_2D)) * P(2, 2, cos(theta_arr_2D))
+bp += 2 * (g_2_2_int*sin(2*phi_arr_2D) - h_2_2_int*cos(2*phi_arr_2D)) * P(2, 2, cos(theta_arr_2D))/sin(theta_arr_2D)
+bt += - (g_2_2_int*cos(2*phi_arr_2D) + h_2_2_int*sin(2*phi_arr_2D)) * dP(2, 2, theta_arr_2D)
 # =============================================================================
 # generating the external test magnetic field
 # =============================================================================
-g_1_0_ext, g_1_1_ext = 10, 20
-h_1_1_ext = 30
-g_2_0_ext, g_2_1_ext, g_2_2_ext = 40, 50, 60
-h_2_1_ext, h_2_2_ext = 70, 80
+g_1_0_ext, g_1_1_ext = 40, 2
+h_1_1_ext = 10
+g_2_0_ext, g_2_1_ext, g_2_2_ext = 0, 20, 0
+h_2_1_ext, h_2_2_ext = 0, 0
 
 # case l=1, m=0
-br += - g_1_0_ext * cos(theta_arr_2D)
+br += - g_1_0_ext * P(1, 0, cos(theta_arr_2D))
 bp += 0
-bt += g_1_0_ext * sin(theta_arr_2D)
+bt += - g_1_0_ext * dP(1, 0, theta_arr_2D)
 # case l=1, m=1
-br += - (g_1_1_ext*cos(phi_arr_2D) + h_1_1_ext*sin(phi_arr_2D)) * cos(theta_arr_2D)
-bp += (g_1_1_ext*sin(phi_arr_2D) - h_1_1_ext*cos(phi_arr_2D)) * 1/tan(theta_arr_2D)
-bt +=  (g_1_1_ext*cos(phi_arr_2D) + h_1_1_ext*sin(phi_arr_2D))* sin(theta_arr_2D)
+br += - (g_1_1_ext*cos(phi_arr_2D) + h_1_1_ext*sin(phi_arr_2D)) * P(1, 1, cos(theta_arr_2D))
+bp += (g_1_1_ext*sin(phi_arr_2D) - h_1_1_ext*cos(phi_arr_2D)) *P(1, 1, cos(theta_arr_2D))/sin(theta_arr_2D)
+bt += - (g_1_1_ext*cos(phi_arr_2D) + h_1_1_ext*sin(phi_arr_2D)) * dP(1, 1, theta_arr_2D)
 # case l=2, m=0
-br += - 2 * g_2_0_ext * (3 * cos(theta_arr_2D)**2 - 1)/2
+br += - 2 * g_2_0_ext * P(2, 0, cos(theta_arr_2D))
 bp += 0
-bt += g_2_0_ext * (3 * cos(theta_arr_2D) * sin(theta_arr_2D))   
+bt += - g_2_0_ext * dP(2, 0, theta_arr_2D)
 # case l=2, m=1
-br += - 2* (g_2_1_ext*cos(phi_arr_2D) + h_2_1_ext*sin(phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/2
-bp += (g_2_1_ext*sin(phi_arr_2D) - h_2_1_ext*cos(phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/(2*sin(theta_arr_2D))
-bt += (g_2_1_ext*cos(phi_arr_2D) + h_2_1_ext*sin(phi_arr_2D)) * (3 * cos(theta_arr_2D) * sin(theta_arr_2D))
+br += - 2* (g_2_1_ext*cos(phi_arr_2D) + h_2_1_ext*sin(phi_arr_2D)) * P(2, 1, cos(theta_arr_2D))
+bp += (g_2_1_ext*sin(phi_arr_2D) - h_2_1_ext*cos(phi_arr_2D)) * P(2, 1, cos(theta_arr_2D))/sin(theta_arr_2D)
+bt += - (g_2_1_ext*cos(phi_arr_2D) + h_2_1_ext*sin(phi_arr_2D)) * dP(2, 1, theta_arr_2D)
 # case l=2, m=2
-br += - 2 * (g_2_2_ext*cos(2*phi_arr_2D) + h_2_2_ext*sin(2*phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/2
-bp += 2 * (g_2_2_ext*sin(2*phi_arr_2D) - h_2_2_ext*cos(2*phi_arr_2D)) * (3 * cos(theta_arr_2D)**2 - 1)/(2*sin(theta_arr_2D))
-bt += (g_2_2_ext*cos(2*phi_arr_2D) + h_2_2_ext*sin(2*phi_arr_2D)) * (3 * cos(theta_arr_2D) * sin(theta_arr_2D))
+br  += - 2 * (g_2_2_ext*cos(2*phi_arr_2D) + h_2_2_ext*sin(2*phi_arr_2D)) * P(2, 2, cos(theta_arr_2D))
+bp += 2 * (g_2_2_ext*sin(2*phi_arr_2D) - h_2_2_ext*cos(2*phi_arr_2D)) * P(2, 2, cos(theta_arr_2D))/sin(theta_arr_2D)
+bt += - (g_2_2_ext*cos(2*phi_arr_2D) + h_2_2_ext*sin(2*phi_arr_2D)) * dP(2, 2, theta_arr_2D)
 
-# wenn Bx,By,Bz (etc) aus Datei importiert wird muss B_{x,y,z}.reshape(n_theta, n_phi) passieren
+# if Bx,By,Bz is imported from file, B_{x,y,z}.reshape(n_theta, n_phi) required
 
 # =============================================================================
 # Parameter
@@ -213,16 +263,76 @@ bt += (g_2_2_ext*cos(2*phi_arr_2D) + h_2_2_ext*sin(2*phi_arr_2D)) * (3 * cos(the
 ref_radius = 1
 ana_radius = ref_radius
 degree_max = 3
-m = 0
-if m > degree_max:
+target_order = 1
+if target_order > degree_max:
     raise SystemExit("target Order can't be larger than the maximum degree")
 
 coeff_int, coeff_ext = SHA_by_integration(br, bp, bt, ana_radius, ref_radius,
-                                          theta_arr, phi_arr, degree_max, m)
+                                          theta_arr, phi_arr, degree_max,
+                                          target_order)
 
-print("g_1" + str(m) + "_int", coeff_int[1])
-print("g_2" + str(m) + "_int", coeff_int[2])
-# print("g_3" + str(m) + "_int", coeff_int[3])  # es sollte |g3m_int|<<1 sein
-print("g_1" + str(m) + "_ext", coeff_ext[1])
-print("g_2" + str(m) + "_ext", coeff_ext[2])
-# print("g_3" + str(m) + "_ext", coeff_ext[3])  # es sollte |g3m_ext|<<1 sein
+print("g_1" + str(target_order) + "_int", coeff_int[1])
+print("g_2" + str(target_order) + "_int", coeff_int[2])
+# print("g_3" + str(target_order) + "_int", coeff_int[3])
+print("g_1" + str(target_order) + "_ext", coeff_ext[1])
+print("g_2" + str(target_order) + "_ext", coeff_ext[2])
+# print("g_3" + str(target_order) + "_ext", coeff_ext[3])
+
+
+# # =============================================================================
+# #  test
+# # =============================================================================
+# def dP(l, m, theta):
+#     return asarray([calcLegPol(degree_max, theta)[1][legind(l, m)] for theta in theta_arr])
+
+# BR_int, BP_int, BT_int = 0, 0, 0
+# # case l=1, m=0
+# BR_int += 2 * g_1_0_int * P(1, 0, cos(theta_arr))
+# BP_int += 0
+# BT_int += - g_1_0_int * dP(1, 0, theta_arr)
+# # case l=1, m=1
+# BR_int += 2 * (g_1_1_int*cos(1*phi_arr) + h_1_1_int*sin(1*phi_arr)) * P(1, 1, cos(theta_arr))
+# BP_int += (g_1_1_int*sin(1*phi_arr) - h_1_1_int*cos(1*phi_arr)) * P(1, 1, cos(theta_arr))/sin(theta_arr)
+# BT_int += - (g_1_1_int*cos(1*phi_arr) + h_1_1_int*sin(1*phi_arr)) * dP(1, 1, theta_arr)
+# # case l=2, m=0
+# BR_int += 3 * g_2_0_int * P(2, 0, cos(theta_arr))
+# BP_int += 0
+# BT_int += - g_2_0_int * dP(2, 0, theta_arr)
+# # case l=2, m=1
+# BR_int += 3 * (g_2_1_int*cos(1*phi_arr) + h_2_1_int*sin(1*phi_arr)) * P(2, 1, cos(theta_arr))
+# BP_int += (g_2_1_int*sin(1*phi_arr) - h_2_1_int*cos(1*phi_arr)) * P(2, 1, cos(theta_arr))/sin(theta_arr)
+# BT_int += - (g_2_1_int*cos(1*phi_arr) + h_2_1_int*sin(1*phi_arr)) * dP(2, 1, theta_arr)
+# # case l=2, m=2
+# BR_int += 3 * (g_2_2_int*cos(2*phi_arr) + h_2_2_int*sin(2*phi_arr)) * P(2, 2, cos(theta_arr))
+# BP_int += 2 * (g_2_2_int*sin(2*phi_arr) - h_2_2_int*cos(2*phi_arr)) * P(2, 2, cos(theta_arr))/sin(theta_arr)
+# BT_int += - (g_2_2_int*cos(2*phi_arr) + h_2_2_int*sin(2*phi_arr)) * dP(2, 2, theta_arr)
+
+# BR_ext, BP_ext, BT_ext = 0, 0, 0
+# # case l=1, m=0
+# BR_ext += - g_1_0_ext * P(1, 0, cos(theta_arr))
+# BP_ext += 0
+# BT_ext += - g_1_0_ext * dP(1, 0, theta_arr)
+# # case l=1, m=1
+# BR_ext += - (g_1_1_ext*cos(phi_arr) + h_1_1_ext*sin(phi_arr)) * P(1, 1, cos(theta_arr))
+# BP_ext += (g_1_1_ext*sin(phi_arr) - h_1_1_ext*cos(phi_arr)) *P(1, 1, cos(theta_arr))/sin(theta_arr)
+# BT_ext += - (g_1_1_ext*cos(phi_arr) + h_1_1_ext*sin(phi_arr)) * dP(1, 1, theta_arr)
+# # case l=2, m=0
+# BR_ext += - 2 * g_2_0_ext * P(2, 0, cos(theta_arr))
+# BP_ext += 0
+# BT_ext += - g_2_0_ext * dP(2, 0, theta_arr)
+# # case l=2, m=1
+# BR_ext += - 2* (g_2_1_ext*cos(phi_arr) + h_2_1_ext*sin(phi_arr)) * P(2, 1, cos(theta_arr))
+# BP_ext += (g_2_1_ext*sin(phi_arr) - h_2_1_ext*cos(phi_arr)) * P(2, 1, cos(theta_arr))/sin(theta_arr)
+# BT_ext += - (g_2_1_ext*cos(phi_arr) + h_2_1_ext*sin(phi_arr)) * dP(2, 1, theta_arr)
+# # case l=2, m=2
+# BR_ext  += - 2 * (g_2_2_ext*cos(2*phi_arr) + h_2_2_ext*sin(2*phi_arr)) * P(2, 2, cos(theta_arr))
+# BP_ext += 2 * (g_2_2_ext*sin(2*phi_arr) - h_2_2_ext*cos(2*phi_arr)) * P(2, 2, cos(theta_arr))/sin(theta_arr)
+# BT_ext += - (g_2_2_ext*cos(2*phi_arr) + h_2_2_ext*sin(2*phi_arr)) * dP(2, 2, theta_arr)
+
+# # plt.plot(BR_int, label="B_r,int, SHA")
+# # plt.plot(BP_int, label="B_phi,int, SHA")
+# # plt.plot(BT_int, label="B_theta,int, SHA")
+# # plt.plot(BR_ext, label="B_r,ext, SHA")
+# # plt.plot(BP_ext, label="B_phi,ext, SHA")
+# # plt.plot(BT_ext, label="B_theta,ext, SHA")
+# # plt.legend()

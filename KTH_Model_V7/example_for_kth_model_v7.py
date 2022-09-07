@@ -1,5 +1,8 @@
+"""
+Dokumentation einfuegen, evtl. umbenennen oder zentrale Parameter Datei
+"""
 from numpy import pi, sin, cos, sqrt
-from numpy import arange, full, meshgrid, ravel
+from numpy import linspace, full, meshgrid, ravel
 from kth14_model_for_mercury_v7 import kth14_model_for_mercury_v7
 import json
 import os
@@ -66,8 +69,8 @@ def save_and_plot():
 # parameters
 # =============================================================================
 R_M = 2440
-dipole, neutralsheet, prc, internal, external = True, False, False, False, True
-r_hel_val, di_val = 0.5, 50
+dipole, neutralsheet, prc, internal, external = True, False, False, True, False
+r_hel_val, di_val = 0.4, 50
 
 R_M = R_M * (1 + 1E-6)  # factor needed cause of rounding in model_field_v7
 settings = [dipole, neutralsheet, prc, internal, external]
@@ -75,8 +78,8 @@ settings = [dipole, neutralsheet, prc, internal, external]
 n_theta = int(200)
 n_phi = int(2*n_theta)
 num_pts = int(n_theta * n_phi)
-theta_arr = arange(0, pi, pi/n_theta)
-phi_arr = arange(0, 2*pi, 2*pi/n_phi)
+theta_arr = linspace(0, pi, n_theta, endpoint=False)
+phi_arr = linspace(0, 2*pi, n_phi, endpoint=False)
 phi_arr_2D, theta_arr_2D = meshgrid(phi_arr, theta_arr)
 phi, theta = ravel(phi_arr_2D), ravel(theta_arr_2D)
 
