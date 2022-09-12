@@ -4,6 +4,7 @@ Dokumentation einfuegen
 from datetime import datetime
 import numpy as np
 import pandas as pd
+import json
 from scipy.constants import m_p
 import matplotlib.pyplot as plt
 
@@ -57,15 +58,13 @@ for i in range(len(R_SS)):
 # =============================================================================
 # interpolate data, required for fft
 # =============================================================================
-pseudo_distance = pseudo_distance.interpolate(method='linear').tolis
-t()
-"""
-pseudo_distance is the parameter that is required for the KTH-Modell
-"""
+pseudo_distance = pseudo_distance.interpolate(method='linear').tolist()
+
 # =============================================================================
 # save the data
 # =============================================================================
-
+with open('data/pseudo_distance.json', 'w') as f:
+    json.dump({'pseudo_distance': pseudo_distance}, f)
 
 # =============================================================================
 # plot data

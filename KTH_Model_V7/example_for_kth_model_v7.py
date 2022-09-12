@@ -1,7 +1,7 @@
 """
-Dokumentation einfuegen, evtl. umbenennen oder zentrale Parameter Datei
+Dokumentation einfuegen, evtl. umbenennen
 """
-from numpy import pi, sin, cos, sqrt
+from numpy import pi, sin, cos, hypot
 from numpy import linspace, full, meshgrid, ravel
 from kth14_model_for_mercury_v7 import kth14_model_for_mercury_v7
 import json
@@ -14,9 +14,10 @@ def data(r_hel_val, di_val, settings):
     x = R_M * sin(theta) * cos(phi)
     y = R_M * sin(theta) * sin(phi)
     z = R_M * cos(theta)
-    r_hel = full(num_pts, float(r_hel_val))  # [0.4, 0.47]
+    r_hel = full(num_pts, float(r_hel_val))
     di = full(num_pts, float(di_val))  # 0.5 is mean disturbance
-    kappa = 3464.8/(2.0695 - (0.00355 * di_val) * r_hel_val**(1/3) * R_M)
+    R_MP_DEFAULT = 3464.8
+    kappa = R_MP_DEFAULT/(2.0695 - (0.00355 * di_val) * r_hel_val**(1/3) * R_M)
 
     new = {'settings': settings, 'kappa': kappa}
 
@@ -25,10 +26,8 @@ def data(r_hel_val, di_val, settings):
 
 def save_and_plot():
     def cart2sph():
-        B_r = sin(theta)*cos(phi) * B_x + sin(theta)*sin(phi) * B_y
-        + cos(theta) * B_z
-        B_theta = cos(theta)*cos(phi) * B_x + cos(theta)*sin(phi) * B_y
-        - sin(theta) * B_z
+        B_r = sin(theta)*cos(phi) * B_x + sin(theta)*sin(phi) * B_y + cos(theta) * B_z
+        B_theta = cos(theta)*cos(phi) * B_x + cos(theta)*sin(phi) * B_y - sin(theta) * B_z
         B_phi = - sin(phi) * B_x + cos(phi) * B_y
 
         return B_r, B_theta, B_phi
@@ -48,7 +47,7 @@ def save_and_plot():
         plt.suptitle("dipole, neutralsheet, prc, internal, external = "
                      + str(new['settings']))
         ax.grid()
-        lon, lat = phi_arr - pi, theta_arr - pi/2
+        lon, lat = phi_arr - pi, pi/2 - theta_arr
         im = ax.contourf(lon, lat, B.reshape(n_theta, n_phi), levels=10)
         cbar = plt.colorbar(im)
         cbar.set_label('$B$ [$nT$]')
@@ -60,7 +59,7 @@ def save_and_plot():
         img.show()
     else:
         B_r, B_theta, B_phi = cart2sph()
-        B = sqrt(B_r**2 + B_theta**2 + B_phi**2)
+        B = hypot(hypot(B_r, B_theta), B_phi)
         save()
         mollweide_plot()
 
@@ -78,8 +77,8 @@ settings = [dipole, neutralsheet, prc, internal, external]
 n_theta = int(200)
 n_phi = int(2*n_theta)
 num_pts = int(n_theta * n_phi)
-theta_arr = linspace(0, pi, n_theta, endpoint=False)
-phi_arr = linspace(0, 2*pi, n_phi, endpoint=False)
+phi_arr = linspace(1E-4, 2*pi, n_phi, endpoint=False)
+theta_arr = linspace(1E-4, pi, n_theta, endpoint=False)
 phi_arr_2D, theta_arr_2D = meshgrid(phi_arr, theta_arr)
 phi, theta = ravel(phi_arr_2D), ravel(theta_arr_2D)
 
