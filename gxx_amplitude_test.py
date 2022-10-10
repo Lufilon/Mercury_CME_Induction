@@ -1,23 +1,20 @@
+# -*- coding: utf-8 -*-
 """
-Was genau macht das Programm und warum braucht man das? Der rebuild muss ja nur
-noch da sein, falls in der Herleitung zu dem Programm gezeigt, dass es möglich ist
+Created on Tue Sep 20 20:49:36 2022
+
+@author: Luis-
 """
+
 from numpy.fft import fft, fftfreq, ifft
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import skewnorm
-np.random.seed(1234)
 
 
 def data():
     # asymmetric gaussian
     height = 1
     data = height * skewnorm.pdf(t, a=2, loc=t[int(N/2)])
-
-    # add noise to the signal
-    # noise_power = 1E-4
-    # noise = np.random.normal(scale=np.sqrt(noise_power), size=t.shape)
-    # data += noise
 
     return data
 
@@ -52,8 +49,6 @@ def rebuild(fft_own):
     f, ax = plt.subplots(1, 1)
     ax.plot(t, data_init, label="original")
     ax.plot(t, rebuild, label="rebuild")
-    # ax.plot(t, (data_init - rebuild), label="diff")
-    # ax.set_title(" (data_init-rebuild) for height=5, a=5, t1-t0=100")
     ax.legend()
 
 # =============================================================================
@@ -61,11 +56,11 @@ def rebuild(fft_own):
 # =============================================================================
 t0 = 0
 t1 = 10
-N = 4096
+N = 7200
 t = np.linspace(t0, t1, int(N))
-dt = (t1 - t0) / N
+dt = t[1] - t[0]
 
-threshold = 0.01  # determines the number of frequencies used for the rebuild
+threshold = 0  # determines the number of frequencies used for the rebuild
 
 data_init = data()
 fft_init = fft_own(data_init)

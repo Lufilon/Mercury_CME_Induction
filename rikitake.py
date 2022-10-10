@@ -1,11 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Oct  5 15:31:42 2022
+
+@author: Luis-
+"""
+
+from numpy import sqrt, pi, float64
+import mpmath
+mpmath.mp.dps = 6
+
+
 """
 Programm to calculate the Rikitake factor for a given degree of magnetic field,
 induction parameter and radial distance.
 """
-import numpy as np
-import mpmath
-mpmath.mp.dps = 6  # higher value -> increased precision
-
 
 def rikitake(l, k, r):
     """
@@ -60,10 +68,10 @@ def rikitake(l, k, r):
         return 1 / (q__p(l, k[2] * r[1])) * zaehler / nenner
 
     def p_l(l, z):
-        return np.sqrt(np.pi / (2*z)) * mpmath.besseli(l+1/2, z)
+        return sqrt(pi / (2*z)) * mpmath.besseli(l+1/2, z)
 
     def q_l(l, z):
-        return np.sqrt(np.pi / (2*z)) * mpmath.besselk(l+1/2, z)
+        return sqrt(pi / (2*z)) * mpmath.besselk(l+1/2, z)
 
     def dp_l__dz(l, z):
         return p_l(l-1, z) - (l+1) / z * p_l(l, z)

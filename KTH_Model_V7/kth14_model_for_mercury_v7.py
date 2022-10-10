@@ -67,10 +67,10 @@ def kth14_model_for_mercury_v7(x_mso, y_mso, z_mso, r_hel, di, dipole=True, neut
     #        Reading control parameters and shielding coefficients from file                   #
     ############################################################################################
 
-    with open("control_params_v7_tmp.json", "r") as file:
+    with open("KTH_Model_V7/control_params_v7_tmp.json", "r") as file:
         control_params = json.load(file)
 
-    shielding_input = 'kth_own_cf_fit_parameters_v7.dat'
+    shielding_input = 'KTH_Model_V7/kth_own_cf_fit_parameters_v7.dat'
     shielding_par_file = open(shielding_input, "r")
     shielding_params = np.loadtxt(shielding_par_file)
     shielding_par_file.close()
@@ -161,11 +161,11 @@ def kth14_model_for_mercury_v7(x_mso, y_mso, z_mso, r_hel, di, dipole=True, neut
     #######################################################################################
 
     if len(np.atleast_1d(r_hel)) > 1:
-        if any(r_hel) > 1:
+        if any(r_hel) > 5:
             print('Please use r_hel (heliocentric distance) in AU, not in km.')
             exit()
     if len(np.atleast_1d(r_hel)) == 1:
-        if r_hel > 1:
+        if r_hel > 5:
             print('Please use r_hel (heliocentric distance) in AU, not in km.')
             exit()
 
@@ -219,7 +219,7 @@ def kth14_model_for_mercury_v7(x_mso, y_mso, z_mso, r_hel, di, dipole=True, neut
         if len(usable_indices[0]) == 0:
             print('No points within the magnetopause! Aborting calculation...')
             usable_indices = []
-            np.savetxt('usable_indices.txt', usable_indices)
+            np.savetxt('KTH_MODEL_V7/usable_indices.txt', usable_indices)
             return np.array([np.nan, np.nan, np.nan])
             #exit()
             #print('Achtung, hier # weg nehmen')
