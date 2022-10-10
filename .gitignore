@@ -51,6 +51,7 @@ docs/_build/
 
 # Custom files
 plots/
+data/
 KTH_Model_V7/data/
 KTH_Model_V7/plots/
 
