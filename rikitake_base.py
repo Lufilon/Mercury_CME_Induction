@@ -28,7 +28,7 @@ def rikitake_calc(l, f, r_arr, sigma_arr_h, sigma_arr_l):
 
     return real(rikitake_h), imag(rikitake_h), real(rikitake_l), imag(rikitake_l)
 
-def rikitake_plot(l):
+def rikitake_plot(l, freq, riki_h, riki_l, amp):
     # creation of the frequencies
     fmin, fmax = 1E-15, 1E5
     omega_min, omega_max = 2. * pi * fmin, 2. * pi * fmax
@@ -53,17 +53,23 @@ def rikitake_plot(l):
         rikitake_h[i] = rikitake(l, k_arr_h, r_arr)
         rikitake_l[i] = rikitake(l, k_arr_l, r_arr)
 
-    # creation of the diagram
-    plt.figure(2)
-    plt.plot(omega/(2*pi), real(rikitake_h), label='high $\\sigma$', linewidth='2')
-    plt.plot(omega/(2*pi), real(rikitake_l), label='low $\\sigma$', linewidth='2')
-    plt.xscale('log')
-    plt.legend(loc='upper left')
-    plt.ylabel('Real($\\mathcal{R}$)')
-    plt.xlabel('$f\\hspace{0.3}(Hz)$')
+    # creation of the transfer-function
+    plt.figure("Transfer function")
+    plt.plot(omega/(2*pi), real(rikitake_h),
+             label="l=" + str(l) + " high $\\sigma$", linewidth='2')
+    plt.plot(omega/(2*pi), real(rikitake_l),
+             label="l=" + str(l) + " low $\\sigma$", linewidth='2')
+
+    # # add alpha plot of calculated data
+    plt.scatter(freq, riki_h, alpha=amp/max(amp), color='red', s=80)
+    plt.scatter(freq, riki_l, alpha=amp/max(amp), color='green', s=80)
+
     plt.grid(which='major', axis='both', linestyle='-', color='lavender')
+    plt.xlabel('$f\\hspace{0.3}(Hz)$')
+    plt.ylabel('Real($\\mathcal{R}$)')
+    plt.xscale('log')
     plt.xlim(fmin, fmax)
-    plt.title("l = " + str(l))
+    plt.legend(loc='upper left')
 
     # known excitements
     # Liljeblad and Karlsson (2017)

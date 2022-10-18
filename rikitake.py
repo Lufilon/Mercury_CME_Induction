@@ -5,7 +5,7 @@ Created on Wed Oct  5 15:31:42 2022
 @author: Luis-
 """
 
-from numpy import sqrt, pi, float64
+from numpy import sqrt, pi
 import mpmath
 mpmath.mp.dps = 6
 

@@ -9,7 +9,6 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.constants import m_p
-import matplotlib.pyplot as plt
 
 
 def cme_data_input(PATH, EMPTY_ROWS):
@@ -54,7 +53,7 @@ def cme_data_input(PATH, EMPTY_ROWS):
     R_SS = f * pseudo_distance ** (1 / 3) * R_M
 
     for i in range(len(R_SS)):
-        if R_SS[i] < 1 + 5E-2:
+        if R_SS[i] < 1 + 1E-1:
             R_SS[i] = np.nan
             pseudo_distance[i] = np.nan
 
