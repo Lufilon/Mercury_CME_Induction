@@ -28,7 +28,7 @@ def rikitake_calc(l, f, r_arr, sigma_arr_h, sigma_arr_l):
 
     return real(rikitake_h), imag(rikitake_h), real(rikitake_l), imag(rikitake_l)
 
-def rikitake_plot(l, freq, riki_h, riki_l, amp):
+def rikitake_plot(l, f, riki_h, riki_l, amp):
     # creation of the frequencies
     fmin, fmax = 1E-15, 1E5
     omega_min, omega_max = 2. * pi * fmin, 2. * pi * fmax
@@ -55,18 +55,20 @@ def rikitake_plot(l, freq, riki_h, riki_l, amp):
 
     # creation of the transfer-function
     plt.figure("Transfer function")
+    plt.suptitle("Transfer function with alpha plot of simulated data")
+    
     plt.plot(omega/(2*pi), real(rikitake_h),
-             label="l=" + str(l) + " high $\\sigma$", linewidth='2')
+             label="$\\sigma_{high}$, $l=" + str(l) + "$", linewidth='2')
     plt.plot(omega/(2*pi), real(rikitake_l),
-             label="l=" + str(l) + " low $\\sigma$", linewidth='2')
+             label="$\\sigma_{low}$,  $l=" + str(l) + "$", linewidth='2')
 
     # # add alpha plot of calculated data
-    plt.scatter(freq, riki_h, alpha=amp/max(amp), color='red', s=80)
-    plt.scatter(freq, riki_l, alpha=amp/max(amp), color='green', s=80)
+    plt.scatter(f, riki_h, alpha=amp/max(amp), color='red', s=80)
+    plt.scatter(f, riki_l, alpha=amp/max(amp), color='green', s=80)
 
     plt.grid(which='major', axis='both', linestyle='-', color='lavender')
-    plt.xlabel('$f\\hspace{0.3}(Hz)$')
-    plt.ylabel('Real($\\mathcal{R}$)')
+    plt.xlabel('$f$ [$Hz$]')
+    plt.ylabel('Real [$\\mathcal{R}$]')
     plt.xscale('log')
     plt.xlim(fmin, fmax)
     plt.legend(loc='upper left')
@@ -76,29 +78,30 @@ def rikitake_plot(l, freq, riki_h, riki_l, amp):
     # KH-Oscillations
     f30mHz = 30E-3
     plt.vlines(f30mHz, 0, l/(l+1), colors='forestgreen', linestyle='dotted')
-    plt.annotate('30mHz', (f30mHz*1.5, -0.03), color='forestgreen')
+    plt.annotate('30mHz', (f30mHz*0.8, -0.03), color='forestgreen')
 
     # Dungey-cycle
     f2min = 1/(2*60)
     plt.vlines(f2min, 0, l/(l+1), colors='firebrick', linestyle='dotted')
-    plt.annotate('2min', (f2min*0.10, -0.03), color='firebrick')
+    plt.annotate('2min', (f2min*0.2, -0.03), color='firebrick')
 
     # solar rotation
     f642h = 1/(642*3600)
     plt.vlines(f642h, 0, l/(l+1), colors='darkorchid', linestyle='dotted')
-    plt.annotate('642h', (f642h*2.10, -0.03), color='darkorchid')
+    plt.annotate('642h', (f642h*1.5, -0.03), color='darkorchid')
 
     # planetary rotation
-    f88 = 1/(88*24*3600)
-    plt.vlines(f88, 0, l/(l+1), colors='black', linestyle='dotted')
-    plt.annotate('88d', (f88*0.10, -0.03), color='black')
-
     f44 = 1/(44*24*3600)
     plt.vlines(f44, 0, l/(l+1), colors='skyblue', linestyle='dotted')
-    plt.annotate('44d', (f44*0.50, -0.06), color='skyblue')
+    plt.annotate('44d', (f44*0.5, -0.03), color='skyblue')
 
+    f88 = 1/(88*24*3600)
+    plt.vlines(f88, 0, l/(l+1), colors='black', linestyle='dotted')
+    plt.annotate('88d', (f88*0.2, -0.03), color='black')
+
+    # solar cicle
     f22y = 1/(22*365*24*3600)
     plt.vlines(f22y, 0, l/(l+1), colors='goldenrod', linestyle='dotted')
-    plt.annotate('22y', (f22y*0.10, -0.03), color='goldenrod')
+    plt.annotate('22y', (f22y*0.8, -0.03), color='goldenrod')
 
-    plt.savefig('plots/rikitake_l=2.jpg', dpi=600)
+    # plt.savefig('plots/rikitake_l=2.jpg', dpi=600)

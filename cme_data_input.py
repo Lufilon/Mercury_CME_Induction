@@ -22,9 +22,9 @@ def cme_data_input(PATH, EMPTY_ROWS):
 
     t = df['t [s]']
     t_REGEX = '%Y-%m-%dT%H:%M:%S.%f'
-    t0 = datetime.strptime(t[0], t_REGEX).timestamp()
+    t_0 = datetime.strptime(t[0], t_REGEX).timestamp()
     for i in t:
-        t  = t.replace(i, datetime.strptime(i, t_REGEX).timestamp() - t0)
+        t  = t.replace(i, datetime.strptime(i, t_REGEX).timestamp() - t_0)
     N_p = df['N_p [1/cm^3]']
     N_p = N_p * 1E6  # 1/cm^3 -> 1/m^3
     v_r, v_t, v_n = df['v_r [km/s]'], df['v_t [km/s]'], df['v_n [km/s]']
@@ -53,7 +53,7 @@ def cme_data_input(PATH, EMPTY_ROWS):
     R_SS = f * pseudo_distance ** (1 / 3) * R_M
 
     for i in range(len(R_SS)):
-        if R_SS[i] < 1 + 1E-1:
+        if R_SS[i] < 1 + 1E-1:  # 1E-1 caused by rounding in kth-model
             R_SS[i] = np.nan
             pseudo_distance[i] = np.nan
 
