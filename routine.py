@@ -36,9 +36,6 @@ Basic parameters:
 
 Magnetic field parameters:
 
-    REQ_RESOLUTION/REQ_DEGREE_MAX:
-        Search for already calculated data for the given combination.
-
     DIPOLE/NEUTRALSHEET/INTERNAL/EXTERNAL:
         Parameters for the magnetosphere-model.
 
@@ -55,13 +52,13 @@ Which part of the routine is performed:
         using a mollweide projection.
 
     GAUSSIAN_t/PLOTGAUSSIAN_t:
-        Calculate the tim-dependant gaussian coefficients up to DEGREE_Max
+        Calculate the time-dependant gaussian coefficients up to DEGREE_Max
         via spherical harmonic analysis.
         Plot the gaussians in respect to the time for each gaussian listed in
         GAUSS_LIST_EXT.
 
     GAUSSIAN_f/PLOTGAUSSIAN_f:
-        Fourier transform the time-dependant gaussians via FFT to 
+        Fourier transform the time-dependant gaussians via FFT
 """
 
 t0 = time()
@@ -69,8 +66,6 @@ t0 = time()
 # basic parameters for the routine -> runtime saving
 RESOLUTION = 100
 DEGREE_MAX = 2
-REQ_RESOLUTION = 100
-REQ_DEGREE_MAX = 2
 
 # parameters for the kth-modell
 DIPOLE, NEUTRALSHEET = True, True
@@ -78,11 +73,11 @@ INTERNAL, EXTERNAL = True, True
 settings = [DIPOLE, NEUTRALSHEET, False, INTERNAL, EXTERNAL]
 
 # which parts of the routine are performed
-IMPORTANDANGLE, PLOTCME = False, True
-MAGNETICDATA, PLOTMAGNETICDATA = False, True
-GAUSSIAN_t, PLOTGAUSSIAN_t = False, True
-GAUSSIAN_f, PLOTGAUSSIAN_f = False, True
-RIKITAKE, PLOTRIKITAKE = False, True
+IMPORTANDANGLE, PLOTCME = True, False
+MAGNETICDATA, PLOTMAGNETICDATA = True, False
+GAUSSIAN_t, PLOTGAUSSIAN_t = True, True
+GAUSSIAN_f, PLOTGAUSSIAN_f = True, True
+RIKITAKE, PLOTRIKITAKE = True, True
 
 # gaussian to be fourier transformed. Tupel is (l, m), l=degree, m=order
 GAUSS_LIST_EXT = [(1, 0), (2, 1)]
@@ -169,21 +164,21 @@ if MAGNETICDATA:
     # =========================================================================
     try:
         B_r_possible = loadtxt(
-            RUNTIME_MAGNETIC_DIRECTORY + 'RESOLUTION=' + str(REQ_RESOLUTION)
+            RUNTIME_MAGNETIC_DIRECTORY + 'RESOLUTION=' + str(RESOLUTION)
             + '_B_r.gz')
         B_theta_possible = loadtxt(
-            RUNTIME_MAGNETIC_DIRECTORY + 'RESOLUTION=' + str(REQ_RESOLUTION)
+            RUNTIME_MAGNETIC_DIRECTORY + 'RESOLUTION=' + str(RESOLUTION)
             + '_B_theta.gz')
         B_phi_possible = loadtxt(
-            RUNTIME_MAGNETIC_DIRECTORY + 'RESOLUTION=' + str(REQ_RESOLUTION)
+            RUNTIME_MAGNETIC_DIRECTORY + 'RESOLUTION=' + str(RESOLUTION)
             + '_B_phi.gz')
 
-        B_r_possible = B_r_possible.reshape((REQ_RESOLUTION, num_pts))
-        B_theta_possible = B_theta_possible.reshape((REQ_RESOLUTION, num_pts))
-        B_phi_possible = B_phi_possible.reshape((REQ_RESOLUTION, num_pts))
+        B_r_possible = B_r_possible.reshape((RESOLUTION, num_pts))
+        B_theta_possible = B_theta_possible.reshape((RESOLUTION, num_pts))
+        B_phi_possible = B_phi_possible.reshape((RESOLUTION, num_pts))
 
         print("Finished importing the magnetic field components with " +
-              "Resolution=" + str(REQ_RESOLUTION) + ".")
+              "Resolution=" + str(RESOLUTION) + ".")
 
     except OSError:
         print("No magnetic field for this r_hel resolution was calculated yet"
@@ -239,30 +234,13 @@ if MAGNETICDATA:
                     B_theta_possible[i] += B_theta_ns_int
                     B_phi_possible[i] += B_phi_ns_int
 
-        if EXTERNAL:
-            if DIPOLE and NEUTRALSHEET:
-                for i in range(len(possible_distance)):
-                    result = kth_start(possible_distance[i],
-                                       [True, True, False, False, True])
-                    B_r_possible[i] += result[0]
-                    B_theta_possible[i] += result[1]
-                    B_phi_possible[i] += result[2]
-
-            elif DIPOLE:
-                for i in range(len(possible_distance)):
-                    result = kth_start(possible_distance[i],
-                                       [True, False, False, False, True])
-                    B_r_possible[i] += result[0]
-                    B_theta_possible[i] += result[1]
-                    B_phi_possible[i] += result[2]
-
-            elif NEUTRALSHEET:
-                for i in range(len(possible_distance)):
-                    result = kth_start(possible_distance[i],
-                                       [False, True, False, False, True])
-                    B_r_possible[i] += result[0]
-                    B_theta_possible[i] += result[1]
-                    B_phi_possible[i] += result[2]
+        if EXTERNAL and DIPOLE or NEUTRALSHEET:
+            for i in range(len(possible_distance)):
+                result = kth_start(possible_distance[i],
+                                   [DIPOLE, NEUTRALSHEET, False, False, True])
+                B_r_possible[i] += result[0]
+                B_theta_possible[i] += result[1]
+                B_phi_possible[i] += result[2]
 
         print("Finished calculating field components for given resolution.")
 
@@ -310,15 +288,15 @@ if GAUSSIAN_t:
     # =========================================================================
     try:
         coeff_ext_t_possible = loadtxt(
-            RUNTIME_GAUSSIAN_t_DIRECTORY + 'RESOLUTION=' + str(REQ_RESOLUTION)
-            + '_DEGREE_MAX=' + str(REQ_DEGREE_MAX) + '_external.gz')
+            RUNTIME_GAUSSIAN_t_DIRECTORY + 'RESOLUTION=' + str(RESOLUTION)
+            + '_DEGREE_MAX=' + str(DEGREE_MAX) + '_external.gz')
 
         coeff_ext_t_possible = coeff_ext_t_possible.reshape(
-            REQ_RESOLUTION, pow(REQ_DEGREE_MAX, 2) // REQ_DEGREE_MAX+1,
-            REQ_DEGREE_MAX+1)
+            RESOLUTION, pow(DEGREE_MAX, 2) // DEGREE_MAX+1,
+            DEGREE_MAX+1)
 
         print("Finished importing the time dependant gaussian coefficiens "
-              + "with Resolution=" + str(REQ_RESOLUTION) + ".")
+              + "with Resolution=" + str(RESOLUTION) + ".")
 
     except OSError:
         print("No file for this combination of pseudo_distance resolution " +
@@ -478,19 +456,6 @@ if RIKITAKE:
         rikitake_l_real = zeros((len(GAUSS_LIST_EXT), t_steps//2 + 1))
         rikitake_l_imag = zeros((len(GAUSS_LIST_EXT), t_steps//2 + 1))
 
-        phase_rikitake_h = zeros(
-            (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
-        phase_rikitake_l = zeros(
-            (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
-
-        amp_rikitake_h = zeros(
-            (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
-        amp_rikitake_l = zeros(
-            (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
-
-        induced_h = zeros((len(GAUSS_LIST_EXT), t_steps))
-        induced_l = zeros((len(GAUSS_LIST_EXT), t_steps))
-
         for l, m in GAUSS_LIST_EXT:
             index = GAUSS_LIST_EXT.index((l, m))
 
@@ -499,27 +464,7 @@ if RIKITAKE:
                     rikitake_h_real[index][i], rikitake_h_imag[index][i], rikitake_l_real[index][i], rikitake_l_imag[index][i] = rikitake_calc(
                         l, f[index][i], r_arr, sigma_arr_h, sigma_arr_l)
 
-            phase_rikitake_h[index] = arctan2(
-                rikitake_h_imag[index], rikitake_h_real[index])
-            phase_rikitake_l[index] = arctan2(
-                rikitake_l_imag[index], rikitake_l_real[index])
-
-            amp_rikitake_h[index] = coeff_ext_f[index] * hypot(
-                rikitake_h_real[index], rikitake_h_imag[index])
-            amp_rikitake_l[index] = coeff_ext_f[index] * hypot(
-                rikitake_h_real[index], rikitake_h_imag[index])
-            amp_rikitake_h[index] = amp_rikitake_h[index] * exp(
-                0+1j * phase_rikitake_h[index])
-            amp_rikitake_l[index] = amp_rikitake_l[index] * exp(
-                0+1j * phase_rikitake_l[index])
-
-            induced_h[index] = rebuild(
-                t, f[index], amp_rikitake_h[index], phase[index])
-            induced_l[index] = rebuild(
-                t, f[index], amp_rikitake_l[index], phase[index])
-
-        print("Finished performing the inverse FFT of the rikitake modified" +
-              "freq-dependant gaussians.")
+        print("Finished calculating the rikitake factor parts.")
 
         savetxt(RUNTIME_RIKITAKE_DIRECTORY + '_FREQNR=' + str(FREQNR)
                 + '_h_real.gz', rikitake_h_real.ravel())
@@ -532,11 +477,49 @@ if RIKITAKE:
 
         print("Finished saving the rikitake factor parts to file.")
 
+    phase_rikitake_h = zeros(
+        (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
+    phase_rikitake_l = zeros(
+        (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
+
+    amp_rikitake_h = zeros(
+        (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
+    amp_rikitake_l = zeros(
+        (len(GAUSS_LIST_EXT), t_steps//2 + 1), dtype=complex)
+
+    induced_h = zeros((len(GAUSS_LIST_EXT), t_steps))
+    induced_l = zeros((len(GAUSS_LIST_EXT), t_steps))
+
+    for l, m in GAUSS_LIST_EXT:
+        index = GAUSS_LIST_EXT.index((l, m))
+
+        phase_rikitake_h[index] = arctan2(
+            rikitake_h_imag[index], rikitake_h_real[index])
+        phase_rikitake_l[index] = arctan2(
+            rikitake_l_imag[index], rikitake_l_real[index])
+
+        amp_rikitake_h[index] = coeff_ext_f[index] * hypot(
+            rikitake_h_real[index], rikitake_h_imag[index])
+        amp_rikitake_l[index] = coeff_ext_f[index] * hypot(
+            rikitake_h_real[index], rikitake_h_imag[index])
+        amp_rikitake_h[index] = amp_rikitake_h[index] * exp(
+            0+1j * phase_rikitake_h[index])
+        amp_rikitake_l[index] = amp_rikitake_l[index] * exp(
+            0+1j * phase_rikitake_l[index])
+
+        induced_h[index] = rebuild(
+            t, f[index], amp_rikitake_h[index], phase[index])
+        induced_l[index] = rebuild(
+            t, f[index], amp_rikitake_l[index], phase[index])
+
+    print("Finished performing the inverse FFT of the rikitake modified " +
+          "freq-dependant gaussians.")
+
 if PLOTRIKITAKE:
     try:
         fig_gauss_t_inducing.suptitle("Time-dependant inducing and induced " +
                                       "gaussians")
-        fig_gauss_f_inducing.suptitle("Time-dependant inducing and induced " +
+        fig_gauss_f_inducing.suptitle("Freq-dependant inducing and induced " +
                                       "gaussians")
         # add to time-dependant plot
         ax_gauss_t_induced = array(
