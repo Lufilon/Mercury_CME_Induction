@@ -7,6 +7,7 @@ import numpy as np
 from mpmath import mp, besselk
 mp.dps = 6
 mp.pretty = True
+plt.rcParams.update({'font.size': 10})
 
 
 def q_l(l, z):
@@ -30,7 +31,7 @@ def q_l(l, z):
     return np.sqrt(np.pi / (2 * z)) * besselk(l+1 / 2, z)
 
 
-def dq_l__dz(l, z):  # auskommentiert ist die Rekursion laut Abra. und Stegun
+def dq_l__dz(l, z):
     """
     Description
     ----------
@@ -65,13 +66,13 @@ x = np.arange(dx, 10 + dx, dx)
 abra = True means the (faulty) recursion from "Abramowitz and Stegun: Handbook
 of Mathematical Functions (1972)" is used.
 """
-abra = False
+abra = True  # controls if the wrong or correct equation is used
 
 # =============================================================================
 # plot the first derivative of the bessel function for l = start, .., stop
 # =============================================================================
-start, stop = 1, 3
-for l in range(start, stop + 1):
+start, stop = 2, 4
+for l in range(start, stop + 1, 2):
     y = [dq_l__dz(l, z) for z in x]
 
     plt.plot(x, y, label="l = " + str(l) + " recursion")
@@ -80,10 +81,11 @@ for l in range(start, stop + 1):
 plt.ylim(-1E4, 1E4)
 plt.yscale('symlog')
 plt.xlabel("$z$")
-plt.ylabel("$\\frac{d}{dz}q_l(z)$")
+plt.ylabel("$d_z q_l(z)$")
 plt.legend()
 if abra == True:
-    plt.title("recursion according to abra and stegun")
+    plt.title("Recursion according to Abramowitz and Stegun (1972)")
 else:
-    plt.title("recursion not according to abra and stegun")
-# plt.savefig('plots/bessel_falsch_2.jpg', dpi=600)
+    plt.title("Correct recursion equation")
+plt.tight_layout()
+# plt.savefig('plots/recursion_correct_2.jpg', dpi=600)

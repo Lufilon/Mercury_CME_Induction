@@ -78,6 +78,7 @@ def rikitake(l, k, r):
 
     def dq_l__dz(l, z):
         return - q_l(l-1, z) - (l+1)/z * q_l(l, z)
+        # return pow(-1, l) * q_l(l-1, z) - pow(-1, l+1) * (l+1)/z * q_l(l, z)
 
     jmax = len(k)-1
 
