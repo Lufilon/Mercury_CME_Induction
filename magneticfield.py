@@ -138,7 +138,37 @@ def magneticfield_calc(r_hel, phi, theta, num_pts=80000,
 def magneticfield_plot(Br, Bt, Bp, R_ss, phi_arr, theta_arr, resolution=100,
                        n_theta=200, n_phi=400,
                        settings=[True, True, False, True, True]):
-    # Plot the data to a mollweide projection if requested
+    """
+    Plot the data to a mollweide projection for a given R_ss for a given grid.
+
+    Parameters
+    ----------
+    Br : numpy.ndarray.float64
+        r-component of the magnetic field for all (n_theta*n_phi)-points.
+    Bt : numpy.ndarray.float64
+        theta-component of the magnetic field for all (n_theta*n_phi)-points.
+    Bp : numpy.ndarray.float64
+        phi-component of the magnetic field for all (n_theta*n_phi)-points.
+    R_ss : numpy.ndarray.float64
+        DESCRIPTION.
+    phi_arr : numpy.ndarray.float64
+        DESCRIPTION.
+    theta_arr : numpy.ndarray.float64
+        DESCRIPTION.
+    resolution : int, optional
+        DESCRIPTION. The default is 100.
+    n_theta : int, optional
+        DESCRIPTION. The default is 200.
+    n_phi : int, optional
+        DESCRIPTION. The default is 400.
+    settings : list.boolean, optional
+        DESCRIPTION. The default is [True, True, False, True, True].
+
+    Returns
+    -------
+    None.
+
+    """
     possible_R_ss = linspace(nanmin(R_ss), nanmax(R_ss), resolution)
 
     for i, val in enumerate(possible_R_ss[:1]):

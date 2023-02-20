@@ -11,7 +11,7 @@ from legendre_polynomials import P_dP
 from rikitake_base import rikitake_calc, rikitake_plot
 from signal_processing import fft_own, rebuild
 from SHA_by_integration import SHA_by_integration
-from cme_data import cme_data
+from data_input import data_input
 from magneticfield import magneticfield_sum
 from numpy import nanmax, nanmin, savetxt, loadtxt, pi, nan, isnan, hypot, exp
 from numpy import array, linspace, meshgrid, ravel, zeros, asarray, flip
@@ -80,11 +80,13 @@ riki_dir = case_dir + '/rikitake/resolution=' + str(resolution)
 # =============================================================================
 # START OF THE ROUTINE
 # =============================================================================
-t, t_plotting, r_hel, R_ss = cme_data(mission_dir+file_name,
-                                      empty_rows, plot=True)
-t_steps = len(r_hel)
+# load, format and plot data
+t, t_plotting, r_hel, R_ss = data_input(mission_dir+file_name, empty_rows,
+                                        plot=True)
+t_steps = t.size
 
-possible_distance = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
+# distances for which the magnetic field is calculated
+possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
 
 # Create angular data for 200x400 points on a sphere.
 num_pts = int(n_theta * n_phi)
@@ -99,6 +101,10 @@ print("Finished creating the angular data.")
 Br_possible, Bt_possible, Bp_possible = magneticfield_sum(
     r_hel, R_ss, phi_arr, theta_arr, n_theta, n_phi, resolution, settings,
     True, runtime_dir, path='data/helios_1/ns=True/magnetic/resolution=')
+
+"""
+TODO: Ab hier weiter
+"""
 
 if GAUSSIAN_t:
     # Import time dependant Gauss coefficients for given resolution and maximum degree.
@@ -147,13 +153,11 @@ if GAUSSIAN_t:
             print("Calculate or import the magnetic field data first.")
 
     # Assign the values to the data points with the smallest deviation
-    possible_distance = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
-
     coeff_ext_t = zeros((t_steps, maxdegree+1, maxdegree+1))
 
     for i in range(t_steps):
         if not isnan(r_hel[i]):
-            nearest_distance_index = (abs(possible_distance-r_hel[i])).argmin()
+            nearest_distance_index = (abs(possible_distances - r_hel[i])).argmin()
             coeff_ext_t[i] = coeff_ext_t_possible[nearest_distance_index]
         else:
             coeff_ext_t[i] = nan
