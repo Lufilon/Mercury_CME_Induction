@@ -5,28 +5,28 @@ Created on Tue Sep 13 10:24:28 2022
 @author: Luis-
 """
 
-# from numba import njit
-from time import time
 from legendre_polynomials import P_dP
 from rikitake_base import rikitake_calc, rikitake_plot
 from signal_processing import fft_own, rebuild
-from SHA_by_integration import SHA_by_integration
-
-from numpy import nanmax, nanmin, savetxt, loadtxt, pi, nan, isnan, hypot, exp
+from SHA_by_integration import SHA_by_integration_get, SHA_by_integration_plot
+from data_input import data_get
+from magnetic_field import magnetic_field_get
+from time import time
+from numpy import nanmax, nanmin, savetxt, loadtxt, pi, nan, hypot, exp
 from numpy import array, linspace, meshgrid, ravel, zeros, asarray, flip
 from numpy import arctan2, cos, sin, isin, real
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 10})
 
-# own packages
-from data_input import data_input
-from magneticfield import magneticfield_sum
 
 t0 = time()
 
 # =============================================================================
 # Define the parameters of the routine
 # =============================================================================
+# radius of planet Mercury
+R_M = 2440
+
 # reduce sample size -> decreases runtime significantly
 resolution = 100
 
@@ -44,18 +44,18 @@ di_val = 50.
 degree_max = 2
 
 # which parts of the routine are performed - muss noch weg!!!
-GAUSSIAN_t, PLOTGAUSSIAN_t = False, False
 GAUSSIAN_f, PLOTGAUSSIAN_f = False, False
 RIKITAKE, PLOTRIKITAKE = False, False
 
-# array containing gaussians to be analyzed. Tupel is (l, m), l=degree, m=order
+# radius where to evaluate via the SHA
+ana_radius = R_M
+
+# array containing analyzed Gauss coefficients.
+# Tupel is (l, m), l=degree, m=order
 gauss_list_ext = [(1, 0), (2, 1)]
 
 # number of frequencies used for the rikitake calculation - max: t_steps//2 + 1
 freqnr = 3601
-
-# radius of planet Mercury
-R_M = 2440
 
 # specifiy mercuries layers - high and low conductivity cases from grimmich2019
 r_arr = array([0, 1740E3, 1940E3, 2040E3, 2300E3, 2440E3])
@@ -84,114 +84,40 @@ riki_dir = case_dir + '/rikitake/resolution=' + str(resolution)
 # START OF THE ROUTINE
 # =============================================================================
 # load, format and plot data
-t, t_plotting, r_hel, R_ss = data_input(mission_dir+file_name, empty_rows,
-                                        plot=True)
+t, t_plotting, r_hel, R_ss = data_get(mission_dir+file_name, empty_rows,
+                                      plot=True)
 t_steps = t.size
 
 # distances for which the magnetic field is calculated
 possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
 
-# Create angular data for 200x400 points on a sphere.
+# create angular data for 200x400 points on a sphere.
 num_pts = int(num_theta * num_phi)
 theta_arr = linspace(0, pi, num_theta, endpoint=False)
 phi_arr = linspace(0, 2*pi, num_phi, endpoint=False)
 phi_arr_2D, theta_arr_2D = meshgrid(phi_arr, theta_arr)
 theta, phi = ravel(theta_arr_2D), ravel(phi_arr_2D)
+del phi_arr_2D, theta_arr_2D
 
 print("Finished creating the angular data.")
 
-# calulate the magnetic field via the kth22-modell and plot it
-Br_possible, Bt_possible, Bp_possible = magneticfield_sum(
+# calculate the magnetic field via the kth22-modell and plot it
+Br_possible, Bt_possible, Bp_possible = magnetic_field_get(
     possible_distances, R_ss, theta, phi, num_theta, num_phi, resolution,
     settings, True, runtime_dir,
     path='data/helios_1/ns=True/magnetic/resolution=')
 
+# calculate the time dependant Gauss coefficients via the SHA
+coeff_ext_t = SHA_by_integration_get(
+    theta_arr, phi_arr, r_hel, possible_distances, t_steps, Br_possible,
+    Bt_possible, Bp_possible, num_theta, num_phi, degree_max,
+    resolution, ref_radius=R_M, ana_radius=R_M, path=gauss_t_dir)
+
+SHA_by_integration_plot(t_plotting, t_steps, gauss_list_ext, coeff_ext_t)
+
 """
 TODO: Ab hier weiter
 """
-
-if GAUSSIAN_t:
-    # Import time dependant Gauss coefficients for given resolution and maximum degree.
-    try:
-        coeff_ext_t_possible = loadtxt(
-            gauss_t_dir + 'resolution=' + str(resolution)
-            + '_degree_max=' + str(degree_max) + '_external.gz')
-
-        coeff_ext_t_possible = coeff_ext_t_possible.reshape(
-            resolution, pow(degree_max, 2) // degree_max+1,
-            degree_max+1)
-
-        print("Finished importing the time dependant Gauss coefficients"
-              + "with resolution=" + str(resolution) + ".")
-
-    except OSError:
-        print("No file for this combination of pseudo_distance resolution " +
-              "and max degree of spherical analyzed Gauss coefficients was stored " +
-              "for the given CME and given kth-modell parameters. " +
-              "- Started the calculation.")
-
-        # Calculate gaussian-coefficients via a spherical harmonic analysis.
-        ref_radius = R_M
-        ana_radius = ref_radius
-
-        coeff_ext_t_possible = zeros((resolution, degree_max+1, degree_max+1))
-
-        try:
-            for i in range(resolution):
-                for m in range(degree_max + 1):
-                    coeff_ext_t_possible[i][m] = SHA_by_integration(
-                        Br_possible[i], Bt_possible[i], Bp_possible[i],
-                        ana_radius, ref_radius, degree_max, m
-                    )[1]
-
-            print("Finished calculating the time dependant Gauss coefficients " +
-                  "for the given resolution using the SHA by integration.")
-
-            savetxt(gauss_t_dir + 'resolution=' + str(resolution)
-                    + '_degree_max=' + str(degree_max) + '_external.gz',
-                    coeff_ext_t_possible.reshape(coeff_ext_t_possible.shape[0], -1))
-
-            print("Finished saving the time dependant Gauss coefficients.")
-
-        except NameError:
-            print("Calculate or import the magnetic field data first.")
-
-    # Assign the values to the data points with the smallest deviation
-    coeff_ext_t = zeros((t_steps, degree_max+1, degree_max+1))
-
-    for i in range(t_steps):
-        if not isnan(r_hel[i]):
-            nearest_distance_index = (abs(possible_distances - r_hel[i])).argmin()
-            coeff_ext_t[i] = coeff_ext_t_possible[nearest_distance_index]
-        else:
-            coeff_ext_t[i] = nan
-
-    print("Finished upscaling the lower resolution time dependant Gauss coefficients.")
-
-if PLOTGAUSSIAN_t:
-    # Plot external time-dependant inducing Gauss coefficients.
-    try:
-        fig_gauss_t_inducing, ax_gauss_t_inducing = plt.subplots(
-            len(gauss_list_ext),  sharex=True)
-        plt.subplots_adjust(hspace=0)
-        ax_gauss_t_inducing[0].set_title("Time-dependant primary " +
-                                         "Gauss coefficients")
-
-        for l, m in gauss_list_ext:
-            index = gauss_list_ext.index((l, m))
-
-            ax_gauss_t_inducing[index].plot(
-                t_plotting, [coeff_ext_t[i][m][l] for i in range(t_steps)],
-                label="$g_{" + str(l) + str(m) + ", \\mathrm{pri}}}$")
-
-            ax_gauss_t_inducing[index].set_ylabel("$A_\\mathrm{pri}$ $[nT]$")
-            ax_gauss_t_inducing[index].legend(loc='lower left')
-
-        plt.savefig('plots/gaussian_t_solo.jpeg', dpi=600)
-
-    except NameError:
-        print("Set GAUSSIAN_t=True.")
-
 if GAUSSIAN_f:
     # Fourier transform the coefficients to the frequency domain
     f = zeros((len(gauss_list_ext), t_steps//2 + 1))

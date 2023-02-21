@@ -13,7 +13,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 
-def data_input(path, empty_rows=0, plot=False):
+def data_get(path, empty_rows=0, plot=False):
     """
     Read the (cme)-data and calculate the heliocentric distance and subsolar
     standoff distance, if requested plot them.
@@ -31,13 +31,13 @@ def data_input(path, empty_rows=0, plot=False):
 
     Returns
     -------
-    t : array.int
+    t : numpy.ndarray.int
         Time since start in seconds.
-    t_plotting : array.datetime
+    t_plotting : anumpy.ndarray.datetime
         Time in UTC, used for plotting.
-    pseudo_distance : array.float
+    pseudo_distance : numpy.ndarray.float64
         Heliocentric peuso-distance in au, calculated via pognan et al (2018).
-    R_ss : array.float
+    R_ss : numpy.ndarray.float64
         Subsolar standoff distance calculated for each pseudo_distance with the
         KTH22-model.
 
@@ -114,13 +114,13 @@ def data_plot(t_plotting, N_p, v, R_ss):
 
     Parameters
     ----------
-    t_plotting : array.datetime
+    t_plotting : numpy.ndarray.datetime
         Time in UTC, used for plotting.
-    N_p : array.float
+    N_p : numpy.ndarray.float64
         Measured number of particles.
-    v : array.float
+    v : numpy.ndarray.float64
         Measured particle velocity.
-    R_ss : array.float
+    R_ss : numpy.ndarray.float64
         Subsolar standoff distance.
 
     Returns
