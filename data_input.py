@@ -95,14 +95,10 @@ def data_input(path, empty_rows=0, plot=False):
             pseudo_distance[i] = np.nan
 
     # interpolate data and cut sides, required for fft
-    R_ss = np.interp(
-        np.arange(R_ss.size),
-        np.arange(R_ss.size)[np.isnan(R_ss) is False],
-        R_ss[np.isnan(R_ss) is False])
-    pseudo_distance = np.interp(
-        np.arange(pseudo_distance.size),
-        np.arange(pseudo_distance.size)[np.isnan(pseudo_distance) is False],
-        pseudo_distance[np.isnan(pseudo_distance) is False])
+    R_ss = pd.DataFrame(R_ss).interpolate(
+        method='linear').to_numpy()
+    pseudo_distance = pd.DataFrame(pseudo_distance).interpolate(
+        method='linear').to_numpy()
 
     print("Calculated the subsolar standoff-distance")
 

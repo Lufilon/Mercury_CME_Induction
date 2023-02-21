@@ -11,7 +11,7 @@ from kth14_model_for_mercury_v7b import kth14_model_for_mercury_v7b
 import matplotlib.pyplot as plt
 
 
-def magneticfield_sum(r_hel, R_ss, theta, phi, num_theta, num_phi,
+def magneticfield_sum(possible_distances, R_ss, theta, phi, num_theta, num_phi,
                       resolution=100, settings=[True, True, False, True, True],
                       plot=False, runtime_dir='/data/runtime',
                       path='data/helios_1/ns=True/magnetic/resolution='):
@@ -20,7 +20,7 @@ def magneticfield_sum(r_hel, R_ss, theta, phi, num_theta, num_phi,
 
     Parameters
     ----------
-    r_hel : numpy.ndarray.float64
+    possible_distances : numpy.ndarray.float64
         Heliocentric (pseudo) distance.
     R_ss : numpy.ndarray.float64
         Subsolar standoff distance.
@@ -91,9 +91,11 @@ def magneticfield_sum(r_hel, R_ss, theta, phi, num_theta, num_phi,
 
         except OSError:
             Br_di_int, Bt_di_int, Bp_di_int = magneticfield_calc(
-                1, [True, False, False, True, False])
+                possible_distances[0], theta, phi, num_pts,
+                [True, False, False, True, False], 50.)
             Br_ns_int, Bt_ns_int, Bp_ns_int = magneticfield_calc(
-                1, [False, True, False, True, False])
+                possible_distances[0], theta, phi, num_pts,
+                [False, True, False, True, False], 50.)
 
             savetxt(runtime_dir + 'Br_di_int.gz', Br_di_int)
             savetxt(runtime_dir + 'Bt_di_int.gz', Bt_di_int)
@@ -109,25 +111,20 @@ def magneticfield_sum(r_hel, R_ss, theta, phi, num_theta, num_phi,
         Bt_possible = zeros((resolution, num_pts))
         Bp_possible = zeros((resolution, num_pts))
 
-        possible_distance = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
+        if settings[0] and settings[3]:
+            Br_possible += Br_di_int
+            Bt_possible += Bt_di_int
+            Bp_possible += Bp_di_int
 
-        if settings[3]:
-            if settings[0]:
-                for i in range(len(possible_distance)):
-                    Br_possible[i] += Br_di_int
-                    Bt_possible[i] += Bt_di_int
-                    Bp_possible[i] += Bp_di_int
-
-            if settings[1]:
-                for i in range(len(possible_distance)):
-                    Br_possible[i] += Br_ns_int
-                    Bt_possible[i] += Bt_ns_int
-                    Bp_possible[i] += Bp_ns_int
+        if settings[1] and settings[3]:
+            Br_possible += Br_ns_int
+            Bt_possible += Bt_ns_int
+            Bp_possible += Bp_ns_int
 
         if settings[4] and settings[0] or settings[1]:
-            for i in range(len(possible_distance)):
+            for i, val in enumerate(possible_distances):
                 result = magneticfield_calc(
-                    possible_distance[i], phi, theta, num_pts,
+                    val, theta, phi, num_pts,
                     [settings[0], settings[1], False, False, True])
                 Br_possible[i] += result[0]
                 Bt_possible[i] += result[1]
@@ -144,9 +141,41 @@ def magneticfield_sum(r_hel, R_ss, theta, phi, num_theta, num_phi,
     return Br_possible, Bt_possible, Bp_possible
 
 
-def magneticfield_calc(r_hel, phi, theta, num_pts=80000,
+def magneticfield_calc(possible_distance, theta, phi, num_pts=80000,
                        settings=[True, True, False, True, True],
                        di_val=50.):
+    """
+    Helper method that tranforms the data to msm coordinateed, forwards it to
+    the kth22-model and re-transforms the magnetic fiel data.
+
+    Parameters
+    ----------
+    possible_distance : float64
+        Heliocentric (pseudo) distance for which the field is calculated.
+    theta : numpy.ndarray.float64
+        Lattitude of the data.
+    phi : numpy.ndarray.float64
+        Longitude of the data.
+    num_pts : int, optional
+        Number of data points for which the field is calculated.
+        The default is 80000.
+    settings : list.boolean, optional
+        Parameters for the kth22-modell.
+        The default is [True, True, False, True, True].
+    di_val : float, optional
+        Disturbance index.
+        The default is 50..
+
+    Returns
+    -------
+    Br : TYPE
+        Radial magnetic field component for data points at given r_hel.
+    Bt : TYPE
+        latitudinal magnetic field component for data points at given r_hel.
+    Bp : TYPE
+        Longitudinal magnetic field component for data points at given r_hel.
+
+    """
     # set basic parameters and import angle_data
     CONTROL_PARAM_PATH = 'control_params_v7bOct2.json'
     FIT_PARAM_PATH = 'kth_own_cf_fit_parameters_opt_total.dat'
@@ -162,7 +191,7 @@ def magneticfield_calc(r_hel, phi, theta, num_pts=80000,
 
     # calculating the magnetic field components
     B_x, B_y, B_z = kth14_model_for_mercury_v7b(
-        x, y, z, r_hel, di, CONTROL_PARAM_PATH, FIT_PARAM_PATH,
+        x, y, z, possible_distances, di, CONTROL_PARAM_PATH, FIT_PARAM_PATH,
         settings[0], settings[1], settings[2], settings[3], settings[4]
         )
 

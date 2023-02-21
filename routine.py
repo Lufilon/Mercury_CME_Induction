@@ -102,8 +102,9 @@ print("Finished creating the angular data.")
 
 # calulate the magnetic field via the kth22-modell and plot it
 Br_possible, Bt_possible, Bp_possible = magneticfield_sum(
-    r_hel, R_ss, theta_arr, phi_arr, num_theta, num_phi, resolution, settings,
-    True, runtime_dir, path='data/helios_1/ns=True/magnetic/resolution=')
+    possible_distances, R_ss, theta, phi, num_theta, num_phi, resolution,
+    settings, True, runtime_dir,
+    path='data/helios_1/ns=True/magnetic/resolution=')
 
 """
 TODO: Ab hier weiter
