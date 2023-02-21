@@ -37,8 +37,8 @@ internal, external = True, True
 settings = [dipole, neutralsheet, False, internal, external]
 di_val = 50.
 
-# Max Degree for the SHA
-maxdegree = 2
+# Maximum degree for the SHA
+degree_max = 2
 
 # which parts of the routine are performed - muss noch weg!!!
 GAUSSIAN_t, PLOTGAUSSIAN_t = False, False
@@ -46,7 +46,7 @@ GAUSSIAN_f, PLOTGAUSSIAN_f = False, False
 RIKITAKE, PLOTRIKITAKE = False, False
 
 # array containing gaussians to be analyzed. Tupel is (l, m), l=degree, m=order
-gausslist_ext = [(1, 0), (2, 1)]
+gauss_list_ext = [(1, 0), (2, 1)]
 
 # number of frequencies used for the rikitake calculation - max: t_steps//2 + 1
 freqnr = 3601
@@ -111,11 +111,11 @@ if GAUSSIAN_t:
     try:
         coeff_ext_t_possible = loadtxt(
             gauss_t_dir + 'resolution=' + str(resolution)
-            + '_maxdegree=' + str(maxdegree) + '_external.gz')
+            + '_degree_max=' + str(degree_max) + '_external.gz')
 
         coeff_ext_t_possible = coeff_ext_t_possible.reshape(
-            resolution, pow(maxdegree, 2) // maxdegree+1,
-            maxdegree+1)
+            resolution, pow(degree_max, 2) // degree_max+1,
+            degree_max+1)
 
         print("Finished importing the time dependant Gauss coefficients"
               + "with resolution=" + str(resolution) + ".")
@@ -130,21 +130,21 @@ if GAUSSIAN_t:
         ref_radius = R_M
         ana_radius = ref_radius
 
-        coeff_ext_t_possible = zeros((resolution, maxdegree+1, maxdegree+1))
+        coeff_ext_t_possible = zeros((resolution, degree_max+1, degree_max+1))
 
         try:
             for i in range(resolution):
-                for m in range(maxdegree + 1):
+                for m in range(degree_max + 1):
                     coeff_ext_t_possible[i][m] = SHA_by_integration(
                         Br_possible[i], Bt_possible[i], Bp_possible[i],
-                        ana_radius, ref_radius, maxdegree, m
+                        ana_radius, ref_radius, degree_max, m
                     )[1]
 
             print("Finished calculating the time dependant Gauss coefficients " +
                   "for the given resolution using the SHA by integration.")
 
             savetxt(gauss_t_dir + 'resolution=' + str(resolution)
-                    + '_maxdegree=' + str(maxdegree) + '_external.gz',
+                    + '_degree_max=' + str(degree_max) + '_external.gz',
                     coeff_ext_t_possible.reshape(coeff_ext_t_possible.shape[0], -1))
 
             print("Finished saving the time dependant Gauss coefficients.")
@@ -153,7 +153,7 @@ if GAUSSIAN_t:
             print("Calculate or import the magnetic field data first.")
 
     # Assign the values to the data points with the smallest deviation
-    coeff_ext_t = zeros((t_steps, maxdegree+1, maxdegree+1))
+    coeff_ext_t = zeros((t_steps, degree_max+1, degree_max+1))
 
     for i in range(t_steps):
         if not isnan(r_hel[i]):
@@ -168,13 +168,13 @@ if PLOTGAUSSIAN_t:
     # Plot external time-dependant inducing Gauss coefficients.
     try:
         fig_gauss_t_inducing, ax_gauss_t_inducing = plt.subplots(
-            len(gausslist_ext),  sharex=True)
+            len(gauss_list_ext),  sharex=True)
         plt.subplots_adjust(hspace=0)
         ax_gauss_t_inducing[0].set_title("Time-dependant primary " +
                                          "Gauss coefficients")
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
 
             ax_gauss_t_inducing[index].plot(
                 t_plotting, [coeff_ext_t[i][m][l] for i in range(t_steps)],
@@ -190,14 +190,14 @@ if PLOTGAUSSIAN_t:
 
 if GAUSSIAN_f:
     # Fourier transform the coefficients to the frequency domain
-    f = zeros((len(gausslist_ext), t_steps//2 + 1))
-    coeff_ext_f = zeros((len(gausslist_ext), t_steps//2 + 1))
-    phase = zeros((len(gausslist_ext), t_steps//2 + 1))
+    f = zeros((len(gauss_list_ext), t_steps//2 + 1))
+    coeff_ext_f = zeros((len(gauss_list_ext), t_steps//2 + 1))
+    phase = zeros((len(gauss_list_ext), t_steps//2 + 1))
 
-    relIndices = zeros((len(gausslist_ext), freqnr), dtype='int')
+    relIndices = zeros((len(gauss_list_ext), freqnr), dtype='int')
 
-    for l, m in gausslist_ext:
-        index = gausslist_ext.index((l, m))
+    for l, m in gauss_list_ext:
+        index = gauss_list_ext.index((l, m))
         f[index], coeff_ext_f[index], phase[index] = fft_own(
             t, t_steps, asarray([coeff_ext_t[i][m][l] for i in range(t_steps)]))
 
@@ -212,13 +212,13 @@ if GAUSSIAN_f:
 if PLOTGAUSSIAN_f:
     try:
         fig_gauss_f_inducing, ax_gauss_f_inducing = plt.subplots(
-            len(gausslist_ext), sharex=True)
+            len(gauss_list_ext), sharex=True)
         plt.subplots_adjust(hspace=0)
         ax_gauss_f_inducing[0].set_title("Freq-dependant primary and " +
                                          "secondary Gauss coefficients")
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
 
             ax_gauss_f_inducing[index].plot(
                 f[index][1:], coeff_ext_f[index][1:],
@@ -250,10 +250,10 @@ if RIKITAKE:
         rikitake_l_imag = loadtxt(
             riki_dir + '_freqnr=' + str(freqnr) + '_l_imag.gz')
 
-        rikitake_h_real = rikitake_h_real.reshape((len(gausslist_ext), freqnr))
-        rikitake_h_imag = rikitake_h_imag.reshape((len(gausslist_ext), freqnr))
-        rikitake_l_real = rikitake_l_real.reshape((len(gausslist_ext), freqnr))
-        rikitake_l_imag = rikitake_l_imag.reshape((len(gausslist_ext), freqnr))
+        rikitake_h_real = rikitake_h_real.reshape((len(gauss_list_ext), freqnr))
+        rikitake_h_imag = rikitake_h_imag.reshape((len(gauss_list_ext), freqnr))
+        rikitake_l_real = rikitake_l_real.reshape((len(gauss_list_ext), freqnr))
+        rikitake_l_imag = rikitake_l_imag.reshape((len(gauss_list_ext), freqnr))
 
         print("Finished importing the real and imag parts of the rikitake " +
               "factor for the each conductivity profil.")
@@ -263,13 +263,13 @@ if RIKITAKE:
               "- Started the calculation.")
         # Calculate the rikitake factor for the given conductivity profiles for
         # the given freqnr.
-        rikitake_h_real = zeros((len(gausslist_ext), t_steps//2 + 1))
-        rikitake_h_imag = zeros((len(gausslist_ext), t_steps//2 + 1))
-        rikitake_l_real = zeros((len(gausslist_ext), t_steps//2 + 1))
-        rikitake_l_imag = zeros((len(gausslist_ext), t_steps//2 + 1))
+        rikitake_h_real = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        rikitake_h_imag = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        rikitake_l_real = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        rikitake_l_imag = zeros((len(gauss_list_ext), t_steps//2 + 1))
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
 
             for i in range(t_steps//2 + 1):
                 if i in relIndices and i > 0:
@@ -290,20 +290,20 @@ if RIKITAKE:
         print("Finished saving the rikitake factor parts to file.")
 
     phase_rikitake_h = zeros(
-        (len(gausslist_ext), t_steps//2 + 1), dtype=complex)
+        (len(gauss_list_ext), t_steps//2 + 1), dtype=complex)
     phase_rikitake_l = zeros(
-        (len(gausslist_ext), t_steps//2 + 1), dtype=complex)
+        (len(gauss_list_ext), t_steps//2 + 1), dtype=complex)
 
     amp_rikitake_h = zeros(
-        (len(gausslist_ext), t_steps//2 + 1), dtype=complex)
+        (len(gauss_list_ext), t_steps//2 + 1), dtype=complex)
     amp_rikitake_l = zeros(
-        (len(gausslist_ext), t_steps//2 + 1), dtype=complex)
+        (len(gauss_list_ext), t_steps//2 + 1), dtype=complex)
 
-    induced_h = zeros((len(gausslist_ext), t_steps))
-    induced_l = zeros((len(gausslist_ext), t_steps))
+    induced_h = zeros((len(gauss_list_ext), t_steps))
+    induced_l = zeros((len(gauss_list_ext), t_steps))
 
-    for l, m in gausslist_ext:
-        index = gausslist_ext.index((l, m))
+    for l, m in gauss_list_ext:
+        index = gauss_list_ext.index((l, m))
 
         phase_rikitake_h[index] = arctan2(
             rikitake_h_imag[index], rikitake_h_real[index])
@@ -345,8 +345,8 @@ if PLOTRIKITAKE:
         fig_rikitake_phi, ax_rikitake_phi = plt.subplots()
         ax_rikitake_phi.set_title("Argument of the Rikitake factor")
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
             
             color1 = next(color)
             color2 = next(color)
@@ -403,9 +403,9 @@ if PLOTRIKITAKE:
         for i in rikitakedegree:
             c = next(color)
             d = next(color)
-            for l, m in gausslist_ext:
+            for l, m in gauss_list_ext:
                 if i == l:
-                    index = gausslist_ext.index((l, m))
+                    index = gauss_list_ext.index((l, m))
                     rikitake_plot(
                         i, f[index],
                         hypot(rikitake_h_real[index], rikitake_h_imag[index]),
@@ -419,9 +419,9 @@ if PLOTRIKITAKE:
         """
         # plot the transit time of the induced signal
         T_h = [real(phase_rikitake_h[index][1:])/(2*pi*f[index][1:])
-               for index in range(len(gausslist_ext))]
+               for index in range(len(gauss_list_ext))]
         T_l = [real(phase_rikitake_l[index][1:])/(2*pi*f[index][1:])
-               for index in range(len(gausslist_ext))]
+               for index in range(len(gauss_list_ext))]
 
         plt.figure("Transit time of the primary signal")
         plt.title("Transit time of the secondary signal")
@@ -442,12 +442,12 @@ if PLOTRIKITAKE:
 
         # transform to magnetic field for polar orbit at 400 km over surface for phi=0
 
-        B_r_400_h = zeros((len(gausslist_ext), len(theta_arr)))
-        B_theta_400_h = zeros((len(gausslist_ext), len(theta_arr)))
-        B_400_h = zeros((len(gausslist_ext), len(theta_arr)))
-        B_r_400_l = zeros((len(gausslist_ext), len(theta_arr)))
-        B_theta_400_l = zeros((len(gausslist_ext), len(theta_arr)))
-        B_400_l = zeros((len(gausslist_ext), len(theta_arr)))
+        B_r_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
+        B_theta_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
+        B_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
+        B_r_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
+        B_theta_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
+        B_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
 
         phase_rikitake_h_temp = phase_rikitake_h.copy()
         phase_rikitake_l_temp = phase_rikitake_l.copy()
@@ -458,8 +458,8 @@ if PLOTRIKITAKE:
         induced_h_phase0 = induced_h.copy()
         induced_l_phase0 = induced_l.copy()
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
 
         # for the magnetic field conductivity difference plot
             phase_rikitake_h_temp[index] = phase_rikitake_h[index].copy()
@@ -522,8 +522,8 @@ if PLOTRIKITAKE:
         #                     "$\\sigma_h$ and $\\sigma_l$\n caused by in- and" +
         #                     " excluding the phase information for $f_1$")
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
 
             ax_400_r.plot(theta_arr, B_r_400_h[index],
                           label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
@@ -553,7 +553,7 @@ if PLOTRIKITAKE:
         # is it possible to get the phase information from the data?
         """
         TODO
-            Works only for len(gausslist_ext) = 2
+            Works only for len(gauss_list_ext) = 2
         """
         fig_phase, (ax_phase_10, ax_phase_21) = plt.subplots(2, sharex=True)
         plt.subplots_adjust(hspace=0)
@@ -643,10 +643,10 @@ if PLOTRIKITAKE:
         fig_phase.savefig(
             'plots/single_freq_rebuild_' + str(resolution) + '.jpg', dpi=600)
 
-        for l, m in gausslist_ext:
-            index = gausslist_ext.index((l, m))
+        for l, m in gauss_list_ext:
+            index = gauss_list_ext.index((l, m))
 
-            ax_solo = plt.subplot(len(gausslist_ext), 1, index + 1)
+            ax_solo = plt.subplot(len(gauss_list_ext), 1, index + 1)
 
             ax_solo.plot(t_plotting,
                       rebuild(t, [f[index][1]], [coeff_ext_f[index][1]], [phase[index][1]]),
@@ -675,8 +675,8 @@ plt.close('all')  # closes all figures
 #                       "the rebuild using $\\sigma_h$, in- and " + 
 #                       "excluding phase information\n for resolution 100 and 200")
 
-# for l, m in gausslist_ext:
-#     index = gausslist_ext.index((l, m))
+# for l, m in gauss_list_ext:
+#     index = gauss_list_ext.index((l, m))
 
 #     ax_400_r.plot(theta_arr, A1[index] - B1[index],
 #                   label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")

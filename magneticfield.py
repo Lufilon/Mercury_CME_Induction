@@ -94,7 +94,7 @@ def magneticfield_sum(r_hel, R_ss, phi, theta, n_theta, n_phi, resolution=100,
         magneticfield_save(Br_possible, Bt_possible, Bp_possible,
                            path + str(resolution))
 
-    magneticfield_plot(Br_possible, Bt_possible, Bp_possible, R_ss, phi, theta,
+    magneticfield_plot(Br_possible, Bt_possible, Bp_possible, R_ss, theta, phi,
                        resolution, n_theta, n_phi, settings)
 
     return Br_possible, Bt_possible, Bp_possible
@@ -135,7 +135,7 @@ def magneticfield_calc(r_hel, phi, theta, num_pts=80000,
     return Br, Bt, Bp
 
 
-def magneticfield_plot(Br, Bt, Bp, R_ss, phi_arr, theta_arr, resolution=100,
+def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr, resolution=100,
                        n_theta=200, n_phi=400,
                        settings=[True, True, False, True, True]):
     """
@@ -150,19 +150,22 @@ def magneticfield_plot(Br, Bt, Bp, R_ss, phi_arr, theta_arr, resolution=100,
     Bp : numpy.ndarray.float64
         phi-component of the magnetic field for all (n_theta*n_phi)-points.
     R_ss : numpy.ndarray.float64
-        DESCRIPTION.
-    phi_arr : numpy.ndarray.float64
-        DESCRIPTION.
+        Subsolar standoff distance.
     theta_arr : numpy.ndarray.float64
-        DESCRIPTION.
+        Lattitude of the data.
+    phi_arr : numpy.ndarray.float64
+        Longitude of the data.
     resolution : int, optional
-        DESCRIPTION. The default is 100.
+        Number of distances for which the magnetic field is calculated for.
+        The default is 100.
     n_theta : int, optional
-        DESCRIPTION. The default is 200.
+        Number of points in latteral direction. The default is 200.
     n_phi : int, optional
-        DESCRIPTION. The default is 400.
+        Number of points in longitudinal  direction. The default is 400.
     settings : list.boolean, optional
-        DESCRIPTION. The default is [True, True, False, True, True].
+        Parameters for the kth22-modell.
+        [dipole, neutralsheet, pcr, internal, external].
+        The default is [True, True, False, True, True].
 
     Returns
     -------

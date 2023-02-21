@@ -22,7 +22,7 @@ def data_input(path, empty_rows=0, plot=False):
     ----------
     path : String
         Path to .txt file containing the data.
-        Time needs to be in ISO 8601 format, given in t_regex.
+        Time needs to be in ISO 8601 format, given in regex.
     empty_rows : int, optional
         Rows to skip in data file. The default is 0.
     plot : TYPE, boolean
@@ -31,13 +31,13 @@ def data_input(path, empty_rows=0, plot=False):
 
     Returns
     -------
-    t : integer array
+    t : array.int
         Time since start in seconds.
-    t_plotting : datetime array
+    t_plotting : array.datetime
         Time in UTC, used for plotting.
-    pseudo_distance : float array
+    pseudo_distance : array.float
         Heliocentric peuso-distance in au, calculated via pognan et al (2018).
-    R_ss : float array
+    R_ss : array.float
         Subsolar standoff distance calculated for each pseudo_distance with the
         KTH22-model.
 
@@ -57,11 +57,11 @@ def data_input(path, empty_rows=0, plot=False):
     for i in range(0, t.size):
         t_plotting[i] = t_start + np.timedelta64(i, 'm')
 
-    t_REGEX = '%Y-%m-%dT%H:%M:%S.%f'
-    t_0 = datetime.strptime(t[0], t_REGEX).timestamp()
+    regex = '%Y-%m-%dT%H:%M:%S.%f'
+    t_0 = datetime.strptime(t[0], regex).timestamp()
 
     for i in t:
-        t = t.replace(i, datetime.strptime(i, t_REGEX).timestamp() - t_0)
+        t = t.replace(i, datetime.strptime(i, regex).timestamp() - t_0)
 
     t = t.to_numpy()
 
@@ -97,12 +97,12 @@ def data_input(path, empty_rows=0, plot=False):
     # interpolate data and cut sides, required for fft
     R_ss = np.interp(
         np.arange(R_ss.size),
-        np.arange(R_ss.size)[np.isnan(R_ss) == False],
-        R_ss[np.isnan(R_ss) == False])
+        np.arange(R_ss.size)[np.isnan(R_ss) is False],
+        R_ss[np.isnan(R_ss) is False])
     pseudo_distance = np.interp(
         np.arange(pseudo_distance.size),
-        np.arange(pseudo_distance.size)[np.isnan(pseudo_distance) == False],
-        pseudo_distance[np.isnan(pseudo_distance) == False])
+        np.arange(pseudo_distance.size)[np.isnan(pseudo_distance) is False],
+        pseudo_distance[np.isnan(pseudo_distance) is False])
 
     print("Calculated the subsolar standoff-distance")
 
@@ -113,6 +113,25 @@ def data_input(path, empty_rows=0, plot=False):
 
 
 def data_plot(t_plotting, N_p, v, R_ss):
+    """
+    Plot the given Data and the resulting subsolar standoff distance over time.
+
+    Parameters
+    ----------
+    t_plotting : array.datetime
+        Time in UTC, used for plotting.
+    N_p : array.float
+        Measured number of particles.
+    v : array.float
+        Measured particle velocity.
+    R_ss : array.float
+        Subsolar standoff distance.
+
+    Returns
+    -------
+    None.
+
+    """
     # cme_signal
     fig_data, (ax_N_p, ax_v) = plt.subplots(2, sharex=True)
     plt.subplots_adjust(hspace=0)
