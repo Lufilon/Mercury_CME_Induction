@@ -191,7 +191,7 @@ def magneticfield_calc(possible_distance, theta, phi, num_pts=80000,
 
     # calculating the magnetic field components
     B_x, B_y, B_z = kth14_model_for_mercury_v7b(
-        x, y, z, possible_distances, di, CONTROL_PARAM_PATH, FIT_PARAM_PATH,
+        x, y, z, possible_distance, di, CONTROL_PARAM_PATH, FIT_PARAM_PATH,
         settings[0], settings[1], settings[2], settings[3], settings[4]
         )
 
@@ -208,7 +208,7 @@ def magneticfield_calc(possible_distance, theta, phi, num_pts=80000,
     return Br, Bt, Bp
 
 
-def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr,
+def magneticfield_plot(Br, Bt, Bp, R_ss, theta, phi,
                        num_theta=200, num_phi=400, resolution=100,
                        settings=[True, True, False, True, True]):
     """
@@ -216,7 +216,7 @@ def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr,
 
     Parameters
     ----------
-    Br : numpy.ndarray.float64
+    Br : numpy.ndarray.float64^
         r-component of the magnetic field for (num_theta*num_phi)-points.
     Bt : numpy.ndarray.float64
         theta-component of the magnetic field for (num_theta*num_phi)-points.
@@ -224,9 +224,9 @@ def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr,
         phi-component of the magnetic field for (num_theta*num_phi)-points.
     R_ss : numpy.ndarray.float64
         Subsolar standoff distance.
-    theta_arr : numpy.ndarray.float64
+    theta : numpy.ndarray.float64
         Lattitude of the data.
-    phi_arr : numpy.ndarray.float64
+    phi : numpy.ndarray.float64
         Longitude of the data.
     num_theta : int, optional
         Number of points in latteral direction. The default is 200.
@@ -260,7 +260,7 @@ def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr,
         # plt.suptitle("$R_\\mathrm{SS} = " + str(round(val, 2)) + "$\n " +
         #               "Neutralsheet = " + str(settings[1]))
         plt.grid()
-        lon, lat = phi_arr - pi, pi/2 - theta_arr
+        lon, lat = phi[:400] - pi, pi/2 - theta[::400]
         im = plt.contourf(lon, lat, B.reshape(num_theta, num_phi),
                           levels=linspace(0, 700, 8, endpoint=True),
                           extend='both')
