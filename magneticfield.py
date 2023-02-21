@@ -11,12 +11,57 @@ from kth14_model_for_mercury_v7b import kth14_model_for_mercury_v7b
 import matplotlib.pyplot as plt
 
 
-def magneticfield_sum(r_hel, R_ss, phi, theta, n_theta, n_phi, resolution=100,
-                      settings=[True, True, False, True, True], plot=False,
-                      runtime_dir='/data/runtime',
+def magneticfield_sum(r_hel, R_ss, theta, phi, num_theta, num_phi,
+                      resolution=100, settings=[True, True, False, True, True],
+                      plot=False, runtime_dir='/data/runtime',
                       path='data/helios_1/ns=True/magnetic/resolution='):
+    """
+    Calculate the magnetic field on a grid with the kth22-model.
+
+    Parameters
+    ----------
+    r_hel : numpy.ndarray.float64
+        Heliocentric (pseudo) distance.
+    R_ss : numpy.ndarray.float64
+        Subsolar standoff distance.
+    theta : numpy.ndarray.float64
+        Lattitude of the data.
+    phi : numpy.ndarray.float64
+        Longitude of the data.
+    num_theta : int, optional
+        Number of points in latteral direction. The default is 200.
+    num_phi : int, optional
+        Number of points in longitudinal  direction. The default is 400.
+    resolution : int, optional
+        Number of distances for which the magnetic field is calculated for.
+        The default is 100.
+    settings : list.boolean, optional
+        Parameters for the kth22-modell.
+        [dipole, neutralsheet, pcr, internal, external].
+        The default is [True, True, False, True, True].
+    plot : boolean, optional
+        Controls whether or not the magnetic field ist plotted.
+        The default is False.
+    runtime_dir : string, optional
+        Path to the directoy where the di_int and ns_int are saved for runtime.
+        The default is '/data/runtime'.
+    path : string, optional
+        Path to the directory where the magnetic field data for the given com-
+        bination of resolution and settings ist stored.
+        The default is 'data/helios_1/ns=True/magnetic/resolution='.
+
+    Returns
+    -------
+    Br_possible : numpy.ndarray.float64
+        r-component of the magnetic field for (num_theta*num_phi)-points.
+    Bt_possible : numpy.ndarray.float64
+        theta-component of the magnetic field for (num_theta*num_phi)-points.
+    Bp_possible : numpy.ndarray.float64
+        phi-component of the magnetic field for (num_theta*num_phi)-points.
+
+    """
     try:
-        num_pts = n_theta * n_phi
+        num_pts = num_theta * num_phi
 
         Br_possible = loadtxt(path + str(resolution) + '_Br.gz')
         Bt_possible = loadtxt(path + str(resolution) + '_Bt.gz')
@@ -33,8 +78,7 @@ def magneticfield_sum(r_hel, R_ss, phi, theta, n_theta, n_phi, resolution=100,
         print("No magnetic field for this r_hel resolution was calculated yet"
               + " - Starting the calculation.")
 
-        # Calculate the internal dipole and neutralsheet magnetic field, as
-        # they are the same for every R_ss distance.
+        # di_int and ns_int are the same for every R_ss distance
         try:
             Br_di_int = loadtxt(runtime_dir + 'Br_di_int.gz')
             Bt_di_int = loadtxt(runtime_dir + 'Bt_di_int.gz')
@@ -60,7 +104,7 @@ def magneticfield_sum(r_hel, R_ss, phi, theta, n_theta, n_phi, resolution=100,
 
             print("Finished calculating dipole_int and neutralsheet_int.")
 
-        # Use the calculated pseudo_distances to calculate the magnetic field.
+        # use the calculated pseudo_distances to calculate the magnetic field.
         Br_possible = zeros((resolution, num_pts))
         Bt_possible = zeros((resolution, num_pts))
         Bp_possible = zeros((resolution, num_pts))
@@ -95,7 +139,7 @@ def magneticfield_sum(r_hel, R_ss, phi, theta, n_theta, n_phi, resolution=100,
                            path + str(resolution))
 
     magneticfield_plot(Br_possible, Bt_possible, Bp_possible, R_ss, theta, phi,
-                       resolution, n_theta, n_phi, settings)
+                       num_theta, num_phi, resolution, settings)
 
     return Br_possible, Bt_possible, Bp_possible
 
@@ -135,8 +179,8 @@ def magneticfield_calc(r_hel, phi, theta, num_pts=80000,
     return Br, Bt, Bp
 
 
-def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr, resolution=100,
-                       n_theta=200, n_phi=400,
+def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr,
+                       num_theta=200, num_phi=400, resolution=100,
                        settings=[True, True, False, True, True]):
     """
     Plot the data to a mollweide projection for a given R_ss for a given grid.
@@ -144,24 +188,24 @@ def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr, resolution=100,
     Parameters
     ----------
     Br : numpy.ndarray.float64
-        r-component of the magnetic field for all (n_theta*n_phi)-points.
+        r-component of the magnetic field for (num_theta*num_phi)-points.
     Bt : numpy.ndarray.float64
-        theta-component of the magnetic field for all (n_theta*n_phi)-points.
+        theta-component of the magnetic field for (num_theta*num_phi)-points.
     Bp : numpy.ndarray.float64
-        phi-component of the magnetic field for all (n_theta*n_phi)-points.
+        phi-component of the magnetic field for (num_theta*num_phi)-points.
     R_ss : numpy.ndarray.float64
         Subsolar standoff distance.
     theta_arr : numpy.ndarray.float64
         Lattitude of the data.
     phi_arr : numpy.ndarray.float64
         Longitude of the data.
+    num_theta : int, optional
+        Number of points in latteral direction. The default is 200.
+    num_phi : int, optional
+        Number of points in longitudinal  direction. The default is 400.
     resolution : int, optional
         Number of distances for which the magnetic field is calculated for.
         The default is 100.
-    n_theta : int, optional
-        Number of points in latteral direction. The default is 200.
-    n_phi : int, optional
-        Number of points in longitudinal  direction. The default is 400.
     settings : list.boolean, optional
         Parameters for the kth22-modell.
         [dipole, neutralsheet, pcr, internal, external].
@@ -188,7 +232,7 @@ def magneticfield_plot(Br, Bt, Bp, R_ss, theta_arr, phi_arr, resolution=100,
         #               "Neutralsheet = " + str(settings[1]))
         plt.grid()
         lon, lat = phi_arr - pi, pi/2 - theta_arr
-        im = plt.contourf(lon, lat, B.reshape(n_theta, n_phi),
+        im = plt.contourf(lon, lat, B.reshape(num_theta, num_phi),
                           levels=linspace(0, 700, 8, endpoint=True),
                           extend='both')
         cbar = plt.colorbar(im)

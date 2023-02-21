@@ -6,10 +6,10 @@ Created on Tue Sep 13 10:14:44 2022
 """
 
 
-from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.constants import m_p
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 

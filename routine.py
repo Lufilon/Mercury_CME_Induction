@@ -11,13 +11,16 @@ from legendre_polynomials import P_dP
 from rikitake_base import rikitake_calc, rikitake_plot
 from signal_processing import fft_own, rebuild
 from SHA_by_integration import SHA_by_integration
-from data_input import data_input
-from magneticfield import magneticfield_sum
+
 from numpy import nanmax, nanmin, savetxt, loadtxt, pi, nan, isnan, hypot, exp
 from numpy import array, linspace, meshgrid, ravel, zeros, asarray, flip
 from numpy import arctan2, cos, sin, isin, real
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 10})
+
+# own packages
+from data_input import data_input
+from magneticfield import magneticfield_sum
 
 t0 = time()
 
@@ -28,8 +31,8 @@ t0 = time()
 resolution = 100
 
 # define grid for magnetic field calculation with the kth22-model
-n_theta = 200
-n_phi = 2 * n_theta
+num_theta = 200
+num_phi = 2 * num_theta
 
 # parameters for the kth22-modell
 dipole, neutralsheet = True, True
@@ -89,9 +92,9 @@ t_steps = t.size
 possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
 
 # Create angular data for 200x400 points on a sphere.
-num_pts = int(n_theta * n_phi)
-theta_arr = linspace(0, pi, n_theta, endpoint=False)
-phi_arr = linspace(0, 2*pi, n_phi, endpoint=False)
+num_pts = int(num_theta * num_phi)
+theta_arr = linspace(0, pi, num_theta, endpoint=False)
+phi_arr = linspace(0, 2*pi, num_phi, endpoint=False)
 phi_arr_2D, theta_arr_2D = meshgrid(phi_arr, theta_arr)
 theta, phi = ravel(theta_arr_2D), ravel(phi_arr_2D)
 
@@ -99,7 +102,7 @@ print("Finished creating the angular data.")
 
 # calulate the magnetic field via the kth22-modell and plot it
 Br_possible, Bt_possible, Bp_possible = magneticfield_sum(
-    r_hel, R_ss, phi_arr, theta_arr, n_theta, n_phi, resolution, settings,
+    r_hel, R_ss, theta_arr, phi_arr, num_theta, num_phi, resolution, settings,
     True, runtime_dir, path='data/helios_1/ns=True/magnetic/resolution=')
 
 """
