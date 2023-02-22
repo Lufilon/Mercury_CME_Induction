@@ -135,23 +135,23 @@ def rebuild(t, freq, amp, phase):
 
 def gaussian_f_plot(freq, coeff_ext_f_amp, gauss_list_ext):
     """
-    
+    Plot the primary gaussian coefficients in the frequency domaine.
 
     Parameters
     ----------
-    freq : TYPE
-        DESCRIPTION.
-    coeff_ext_f_amp : TYPE
-        DESCRIPTION.
+    req : numpy.ndarray.float64
+        Frequency of the fourier transformed signal.
+    coeff_ext_f_amp : numpy.ndarray.float64
+        Amplitude of the fourier transformed signal.
     gauss_list_ext : TYPE
         DESCRIPTION.
 
     Returns
     -------
-    fig_gauss_f : TYPE
-        DESCRIPTION.
-    ax_gauss_f_pri : TYPE
-        DESCRIPTION.
+    fig_gauss_f : matplotlib.figure
+        Figure object for the freq dependant Gauss coefficients.
+    ax_gauss_f_pri : matplotlib.axis
+        Axis for the primary freq dependant Gauss coefficients.
 
     """
     fig_gauss_f, ax_gauss_f_pri = plt.subplots(

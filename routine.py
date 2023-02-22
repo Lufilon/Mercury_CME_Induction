@@ -112,10 +112,11 @@ coeff_ext_t = SHA_by_integration_get(
 fig_gauss_t, ax_gauss_t_pri = SHA_by_integration_plot(
     t_plotting, t_steps, gauss_list_ext, coeff_ext_t)
 
-
+# fourier-transform the time dependant gauss coefficients
 freq, coeff_ext_f_amp, coeff_ext_f_phase = gaussian_t_to_f(
     coeff_ext_t, t, t_steps, gauss_list_ext, freqnr)
 
+# plot the freq dependant gauss coefficients
 fig_gauss_f, ax_gauss_f_pri = gaussian_f_plot(
     freq, coeff_ext_f_amp, gauss_list_ext)
 
