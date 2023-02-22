@@ -5,20 +5,22 @@ Created on Tue Sep 13 10:24:28 2022
 @author: Luis-
 """
 
-from legendre_polynomials import P_dP
-from rikitake_base import rikitake_calc, rikitake_plot
-from signal_processing import gaussian_t_to_f, gaussian_f_to_t, gaussian_f_plot
-from SHA_by_integration import SHA_by_integration_get, SHA_by_integration_plot
+# own packages
 from data_input import data_get
 from magnetic_field import magnetic_field_get
+from SHA_by_integration import SHA_by_integration_get, SHA_by_integration_plot
+from signal_processing import gaussian_t_to_f, gaussian_f_to_t, gaussian_f_plot
+from rikitake_base import rikitake_calc, rikitake_plot
+from legendre_polynomials import P_dP
+
+# third party packages
 from time import time
-from numpy import nanmax, nanmin, savetxt, loadtxt, pi, nan, hypot, exp
-from numpy import array, linspace, meshgrid, ravel, zeros, asarray, flip
-from numpy import arctan2, cos, sin, isin, real
+from numpy import pi, nan, hypot, exp, arctan2, sin, cos, savetxt, loadtxt
+from numpy import array, linspace, meshgrid, ravel, zeros, real
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 10})
 
-
+# get time to obtaine the runtime of the routine
 t0 = time()
 
 # =============================================================================
@@ -120,7 +122,9 @@ freq, coeff_ext_f_amp, coeff_ext_f_phase = gaussian_t_to_f(
 fig_gauss_f, ax_gauss_f_pri = gaussian_f_plot(
     freq, coeff_ext_f_amp, gauss_list_ext)
 
-
+"""
+TODO: Hier weiter
+"""
 if RIKITAKE:
     # calculation of rikitake-factor for each selected frequency for both
     # high and low condutivity model.
