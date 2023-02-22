@@ -7,7 +7,7 @@ Created on Tue Sep 13 10:24:28 2022
 
 from legendre_polynomials import P_dP
 from rikitake_base import rikitake_calc, rikitake_plot
-from signal_processing import fft_own, rebuild
+from signal_processing import gaussian_t_to_f, gaussian_f_to_t, gaussian_f_plot
 from SHA_by_integration import SHA_by_integration_get, SHA_by_integration_plot
 from data_input import data_get
 from magnetic_field import magnetic_field_get
@@ -44,7 +44,6 @@ di_val = 50.
 degree_max = 2
 
 # which parts of the routine are performed - muss noch weg!!!
-GAUSSIAN_f, PLOTGAUSSIAN_f = False, False
 RIKITAKE, PLOTRIKITAKE = False, False
 
 # radius where to evaluate via the SHA
@@ -84,12 +83,8 @@ riki_dir = case_dir + '/rikitake/resolution=' + str(resolution)
 # START OF THE ROUTINE
 # =============================================================================
 # load, format and plot data
-t, t_plotting, r_hel, R_ss = data_get(mission_dir+file_name, empty_rows,
-                                      plot=True)
-t_steps = t.size
-
-# distances for which the magnetic field is calculated
-possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
+t, t_plotting, t_steps, r_hel, R_ss, possible_distances = data_get(
+    mission_dir+file_name, empty_rows, plot=True)
 
 # create angular data for 200x400 points on a sphere.
 num_pts = int(num_theta * num_phi)
@@ -113,59 +108,17 @@ coeff_ext_t = SHA_by_integration_get(
     Bt_possible, Bp_possible, num_theta, num_phi, degree_max,
     resolution, ref_radius=R_M, ana_radius=R_M, path=gauss_t_dir)
 
-SHA_by_integration_plot(t_plotting, t_steps, gauss_list_ext, coeff_ext_t)
+# plot the primary gaussian
+fig_gauss_t, ax_gauss_t_pri = SHA_by_integration_plot(
+    t_plotting, t_steps, gauss_list_ext, coeff_ext_t)
 
-"""
-TODO: Ab hier weiter
-"""
-if GAUSSIAN_f:
-    # Fourier transform the coefficients to the frequency domain
-    f = zeros((len(gauss_list_ext), t_steps//2 + 1))
-    coeff_ext_f = zeros((len(gauss_list_ext), t_steps//2 + 1))
-    phase = zeros((len(gauss_list_ext), t_steps//2 + 1))
 
-    relIndices = zeros((len(gauss_list_ext), freqnr), dtype='int')
+freq, coeff_ext_f_amp, coeff_ext_f_phase = gaussian_t_to_f(
+    coeff_ext_t, t, t_steps, gauss_list_ext, freqnr)
 
-    for l, m in gauss_list_ext:
-        index = gauss_list_ext.index((l, m))
-        f[index], coeff_ext_f[index], phase[index] = fft_own(
-            t, t_steps, asarray([coeff_ext_t[i][m][l] for i in range(t_steps)]))
+fig_gauss_f, ax_gauss_f_pri = gaussian_f_plot(
+    freq, coeff_ext_f_amp, gauss_list_ext)
 
-        # get relevant frequencies, filter f_0 = 0 Hz beforehand
-        relIndices[index] = flip(coeff_ext_f[index].argsort()[-freqnr:])
-        mask = isin(coeff_ext_f[index], coeff_ext_f[index][relIndices[index]],
-                    invert=True)
-        coeff_ext_f[index][mask] = 0
-
-    print("Finished fourier transforming the external Gauss coefficients.")
-
-if PLOTGAUSSIAN_f:
-    try:
-        fig_gauss_f_inducing, ax_gauss_f_inducing = plt.subplots(
-            len(gauss_list_ext), sharex=True)
-        plt.subplots_adjust(hspace=0)
-        ax_gauss_f_inducing[0].set_title("Freq-dependant primary and " +
-                                         "secondary Gauss coefficients")
-
-        for l, m in gauss_list_ext:
-            index = gauss_list_ext.index((l, m))
-
-            ax_gauss_f_inducing[index].plot(
-                f[index][1:], coeff_ext_f[index][1:],
-                label="$g_{" + str(l) + str(m) + ", \\mathrm{pri}}$")
-
-            ax_gauss_f_inducing[index].set_xscale('log')
-            ax_gauss_f_inducing[index].set_ylabel("$A_\\mathrm{pri}$ $[nT]$")
-            ax_gauss_f_inducing[index].legend(loc='upper center')
-            ax_gauss_f_inducing[index].axvline(
-                x=f[index][1], color='goldenrod', linestyle='dotted')
-
-        ax_gauss_f_inducing[1].set_xlabel("$f$ $[Hz]$")
-
-        # plt.savefig('plots/test.jpeg', dpi=600)
-
-    except NameError:
-        print("Set GAUSSIAN_f=True.")
 
 if RIKITAKE:
     # calculation of rikitake-factor for each selected frequency for both
@@ -240,12 +193,12 @@ if RIKITAKE:
         phase_rikitake_l[index] = arctan2(
             rikitake_l_imag[index], rikitake_l_real[index])
 
-        amp_rikitake_h[index] = coeff_ext_f[index] * hypot(
+        amp_rikitake_h[index] = coeff_ext_f_amp[index] * hypot(
             rikitake_h_real[index], rikitake_h_imag[index])
         amp_rikitake_h[index] = amp_rikitake_h[index] * exp(
             0+1j * phase_rikitake_h[index])
 
-        amp_rikitake_l[index] = coeff_ext_f[index] * hypot(
+        amp_rikitake_l[index] = coeff_ext_f_amp[index] * hypot(
             rikitake_l_real[index], rikitake_l_imag[index])
         amp_rikitake_l[index] = amp_rikitake_l[index] * exp(
             0+1j * phase_rikitake_l[index])
@@ -340,7 +293,7 @@ if PLOTRIKITAKE:
                         i, f[index],
                         hypot(rikitake_h_real[index], rikitake_h_imag[index]),
                         hypot(rikitake_l_real[index], rikitake_l_imag[index]),
-                        coeff_ext_f[index], c, d
+                        coeff_ext_f_amp[index], c, d
                     )
 
         """
@@ -397,12 +350,12 @@ if PLOTRIKITAKE:
             phase_rikitake_l_temp[index] = phase_rikitake_l[index].copy()
             phase_rikitake_l_temp[index][1] = 0
 
-            amp_rikitake_h_temp[index] = coeff_ext_f[index] * hypot(
+            amp_rikitake_h_temp[index] = coeff_ext_f_amp[index] * hypot(
                 rikitake_h_real[index], rikitake_h_imag[index])
             amp_rikitake_h_temp[index] = amp_rikitake_h[index] * exp(
                 0+1j * phase_rikitake_h_temp[index])
 
-            amp_rikitake_l_temp[index] = coeff_ext_f[index] * hypot(
+            amp_rikitake_l_temp[index] = coeff_ext_f_amp[index] * hypot(
                 rikitake_l_real[index], rikitake_l_imag[index])
             amp_rikitake_l_temp[index] = amp_rikitake_l[index] * exp(
                 0+1j * phase_rikitake_l_temp[index])
@@ -579,10 +532,10 @@ if PLOTRIKITAKE:
             ax_solo = plt.subplot(len(gauss_list_ext), 1, index + 1)
 
             ax_solo.plot(t_plotting,
-                      rebuild(t, [f[index][1]], [coeff_ext_f[index][1]], [phase[index][1]]),
+                      rebuild(t, [f[index][1]], [coeff_ext_f_amp[index][1]], [phase[index][1]]),
                       label="g" + str(l) + str(m))
             ax_solo.plot(t_plotting,
-                      rebuild(t, [f[index][1]], [coeff_ext_f[index][1]], [0]),
+                      rebuild(t, [f[index][1]], [coeff_ext_f_amp[index][1]], [0]),
                       label="g" + str(l) + str(m) + " $\\varphi=0$")
 
             ax_solo.legend()

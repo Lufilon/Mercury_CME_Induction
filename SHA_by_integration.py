@@ -57,7 +57,7 @@ def SHA_by_integration_get(
 
     Returns
     -------
-    coeff_ext_t : TYPE
+    coeff_ext_t : numpy.ndarray.float64
         Time dependant external Gauss coefficients of the primary field.
 
     """
@@ -266,7 +266,7 @@ def SHA_by_integration_calc(theta_arr, phi_arr, num_theta, num_phi, Br, Bt, Bp,
 
 def SHA_by_integration_plot(t_plotting, t_steps, gauss_list_ext, coeff_ext_t):
     """
-    Plot external time-dependant inducing Gauss coefficients.
+    Plot external time-dependant pri Gauss coefficients.
 
     Parameters
     ----------
@@ -282,23 +282,28 @@ def SHA_by_integration_plot(t_plotting, t_steps, gauss_list_ext, coeff_ext_t):
 
     Returns
     -------
-    None.
+    fig_gauss_t : matplotlib.figure
+        Figure object for the time dependant Gauss coefficients.
+    ax_gauss_t_pri : matplotlib.axis
+        Axis for the primary time dependant Gauss coefficients.
 
     """
-    fig_gauss_t_inducing, ax_gauss_t_inducing = plt.subplots(
+    fig_gauss_t, ax_gauss_t_pri = plt.subplots(
         len(gauss_list_ext),  sharex=True)
     plt.subplots_adjust(hspace=0)
-    ax_gauss_t_inducing[0].set_title("Time-dependant primary Gauss " +
+    ax_gauss_t_pri[0].set_title("Time-dependant primary Gauss " +
                                      "coefficients")
 
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
 
-        ax_gauss_t_inducing[index].plot(
+        ax_gauss_t_pri[index].plot(
             t_plotting, [coeff_ext_t[i][m][l] for i in range(t_steps)],
             label="$g_{" + str(l) + str(m) + ", \\mathrm{pri}}}$")
 
-        ax_gauss_t_inducing[index].set_ylabel("$A_\\mathrm{pri}$ $[nT]$")
-        ax_gauss_t_inducing[index].legend(loc='lower left')
+        ax_gauss_t_pri[index].set_ylabel("$A_\\mathrm{pri}$ $[nT]$")
+        ax_gauss_t_pri[index].legend(loc='lower left')
 
     plt.savefig('plots/gaussian_t_solo.jpeg', dpi=600)
+
+    return fig_gauss_t, ax_gauss_t_pri

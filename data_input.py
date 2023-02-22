@@ -6,14 +6,14 @@ Created on Tue Sep 13 10:14:44 2022
 """
 
 
-import numpy as np
-import pandas as pd
+from numpy import linspace, nanmin, nanmax, array, empty, timedelta64, sqrt, nan
+from pandas import DataFrame, read_csv
 from scipy.constants import m_p
 from datetime import datetime
 import matplotlib.pyplot as plt
 
 
-def data_get(path, empty_rows=0, plot=False):
+def data_get(path, empty_rows=0, resolution=100, plot=False):
     """
     Read the (cme)-data and calculate the heliocentric distance and subsolar
     standoff distance, if requested plot them.
@@ -25,6 +25,9 @@ def data_get(path, empty_rows=0, plot=False):
         Time needs to be in ISO 8601 format, given in regex.
     empty_rows : int, optional
         Rows to skip in data file. The default is 0.
+    resolution : int, optional
+        Number of distances for which the magnetic field is calculated for.
+        The default is 100.
     plot : TYPE, boolean
         Plot the data and subsolar standoff distance if required.
         The default is False.
@@ -35,27 +38,33 @@ def data_get(path, empty_rows=0, plot=False):
         Time since start in seconds.
     t_plotting : anumpy.ndarray.datetime
         Time in UTC, used for plotting.
-    pseudo_distance : numpy.ndarray.float64
+    t_plotting : anumpy.ndarray.datetime
+        Time in UTC, used for plotting.
+    t_steps : int
+        Number of measurements.
+    r_hel : numpy.ndarray.float64
         Heliocentric peuso-distance in au, calculated via pognan et al (2018).
     R_ss : numpy.ndarray.float64
-        Subsolar standoff distance calculated for each pseudo_distance with the
+        Subsolar standoff distance calculated for each r_hel with the
         KTH22-model.
+    possible_distances : numpy.ndarray.float64
+        Heliocentric (pseudo) distance.
 
     """
 
     colnames = [
         't [s]', 'N_p [1/cm^3]', 'v_r [km/s]', 'v_t [km/s]', 'v_n [km/s]'
         ]
-    df = pd.read_csv(path, header=None, delim_whitespace=True, names=colnames,
-                     skiprows=empty_rows)
+    df = read_csv(path, header=None, delim_whitespace=True, names=colnames,
+                  skiprows=empty_rows)
 
     t = df['t [s]']
 
-    t_start = np.array(t[0], dtype='datetime64')
-    t_plotting = np.empty(t.size, dtype='datetime64[ms]')
+    t_start = array(t[0], dtype='datetime64')
+    t_plotting = empty(t.size, dtype='datetime64[ms]')
 
     for i in range(0, t.size):
-        t_plotting[i] = t_start + np.timedelta64(i, 'm')
+        t_plotting[i] = t_start + timedelta64(i, 'm')
 
     regex = '%Y-%m-%dT%H:%M:%S.%f'
     t_0 = datetime.strptime(t[0], regex).timestamp()
@@ -72,40 +81,45 @@ def data_get(path, empty_rows=0, plot=False):
     v_r = df['v_r [km/s]'].to_numpy()
     v_t = df['v_t [km/s]'].to_numpy()
     v_n = df['v_n [km/s]'].to_numpy()
-    v = np.sqrt(v_r**2 + v_t**2 + v_n**2)
+    v = sqrt(v_r**2 + v_t**2 + v_n**2)
     v = v * 1E3  # km/s -> m/s
 
     # calculate the heliocentric distance using the solarwind velocity
     rho = m_p * N_p
     p_dyn = 1/2 * rho * v**2
     T_SOLAR = 4.6E9  # alter der sonne in jahren
-    pseudo_distance = np.sqrt(6.1E-7/p_dyn * (T_SOLAR/1E6)**(-0.67))
+    r_hel = sqrt(6.1E-7/p_dyn * (T_SOLAR/1E6)**(-0.67))
 
-    print("Calculated the heliocentric pseudo_distances.")
+    print("Calculated the heliocentric r_hels.")
 
     di = 50
     R_M = 1
     f = 2.0695 - (0.00355 * di)
-    R_ss = f * pseudo_distance ** (1 / 3) * R_M
+    R_ss = f * r_hel ** (1 / 3) * R_M
 
     # the KTH-Modell can't process R_ss < R_M - remove those data points
     for i in range(R_ss.size):
         if R_ss[i] < 1 + 1E-1:  # 1E-1 caused by rounding in kth-model
-            R_ss[i] = np.nan
-            pseudo_distance[i] = np.nan
+            R_ss[i] = nan
+            r_hel[i] = nan
 
     # interpolate data and cut sides, required for fft
-    R_ss = pd.DataFrame(R_ss).interpolate(
-        method='linear').to_numpy()
-    pseudo_distance = pd.DataFrame(pseudo_distance).interpolate(
-        method='linear').to_numpy()
+    R_ss = DataFrame(R_ss).interpolate(
+        method='linear', limit_direction='both').to_numpy()
+    r_hel = DataFrame(r_hel).interpolate(
+        method='linear', limit_direction='both').to_numpy()
 
     print("Calculated the subsolar standoff-distance")
+
+    t_steps = t.size
+
+    # distances for which the magnetic field is calculated
+    possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
 
     if plot:
         data_plot(t_plotting, N_p, v, R_ss)
 
-    return t, t_plotting, pseudo_distance, R_ss
+    return t, t_plotting, t_steps, r_hel, R_ss, possible_distances
 
 
 def data_plot(t_plotting, N_p, v, R_ss):
