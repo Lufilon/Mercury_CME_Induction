@@ -50,7 +50,7 @@ def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext=[(1, 0), (2, 1)],
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
         freq[index], coeff_ext_f_amp[index], coeff_ext_f_phase[index] = fft_own(
-            t, t_steps, asarray([coeff_ext_t[i][m][l] for i in range(t_steps)]))
+            t, asarray([coeff_ext_t[i][m][l] for i in range(t_steps)]), t_steps)
 
         # get relevant frequencies, filter f_0 = 0 Hz beforehand
         relIndices[index] = flip(coeff_ext_f_amp[index].argsort()[-freqnr:])

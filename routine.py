@@ -7,6 +7,7 @@ Created on Tue Sep 13 10:24:28 2022
 
 # own packages
 from data_input import data_get
+from angular_data import angular_data
 from magnetic_field import magnetic_field_get
 from SHA_by_integration import SHA_by_integration_get, SHA_by_integration_plot
 from signal_processing import gaussian_t_to_f, gaussian_f_to_t, gaussian_f_plot
@@ -89,14 +90,7 @@ t, t_plotting, t_steps, r_hel, R_ss, possible_distances = data_get(
     mission_dir+file_name, empty_rows, plot=True)
 
 # create angular data for 200x400 points on a sphere.
-num_pts = int(num_theta * num_phi)
-theta_arr = linspace(0, pi, num_theta, endpoint=False)
-phi_arr = linspace(0, 2*pi, num_phi, endpoint=False)
-phi_arr_2D, theta_arr_2D = meshgrid(phi_arr, theta_arr)
-theta, phi = ravel(theta_arr_2D), ravel(phi_arr_2D)
-del phi_arr_2D, theta_arr_2D
-
-print("Finished creating the angular data.")
+num_pts, theta_arr, phi_arr, theta, phi = angular_data(num_theta, num_phi)
 
 # calculate the magnetic field via the kth22-modell and plot it
 Br_possible, Bt_possible, Bp_possible = magnetic_field_get(

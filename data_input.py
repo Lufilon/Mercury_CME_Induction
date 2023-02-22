@@ -90,7 +90,7 @@ def data_get(path, empty_rows=0, resolution=100, plot=False):
     T_SOLAR = 4.6E9  # alter der sonne in jahren
     r_hel = sqrt(6.1E-7/p_dyn * (T_SOLAR/1E6)**(-0.67))
 
-    print("Calculated the heliocentric r_hels.")
+    print("Calculated the heliocentric pseudo_distances.")
 
     di = 50
     R_M = 1
