@@ -39,13 +39,15 @@ def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext=[(1, 0), (2, 1)],
         Amplitude of the primary gauss coefficients.
     coeff_ext_f_phase : numpy.ndarray.float64
         Phase of the primary gauss coefficients.
+    rel_indices : numpy.ndarray.int
+        The freqnr indices used for the analysis.
 
     """
     freq = zeros((len(gauss_list_ext), t_steps//2 + 1))
     coeff_ext_f_amp = zeros((len(gauss_list_ext), t_steps//2 + 1))
     coeff_ext_f_phase = zeros((len(gauss_list_ext), t_steps//2 + 1))
 
-    relIndices = zeros((len(gauss_list_ext), freqnr), dtype='int')
+    rel_indices = zeros((len(gauss_list_ext), freqnr), dtype='int')
 
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
@@ -53,14 +55,14 @@ def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext=[(1, 0), (2, 1)],
             t, asarray([coeff_ext_t[i][m][l] for i in range(t_steps)]), t_steps)
 
         # get relevant frequencies, filter f_0 = 0 Hz beforehand
-        relIndices[index] = flip(coeff_ext_f_amp[index].argsort()[-freqnr:])
-        mask = isin(coeff_ext_f_amp[index], coeff_ext_f_amp[index][relIndices[index]],
+        rel_indices[index] = flip(coeff_ext_f_amp[index].argsort()[-freqnr:])
+        mask = isin(coeff_ext_f_amp[index], coeff_ext_f_amp[index][rel_indices[index]],
                     invert=True)
         coeff_ext_f_amp[index][mask] = 0
 
     print("Finished fourier-transforming the external Gauss coefficients.")
     
-    return freq, coeff_ext_f_amp, coeff_ext_f_phase
+    return freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices
 
 
 def gaussian_f_to_t():
