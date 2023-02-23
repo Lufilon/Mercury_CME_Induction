@@ -12,20 +12,22 @@ from numpy import savetxt, loadtxt, zeros, arange, array, arctan2, hypot
 import mpmath
 mpmath.mp.dps = 6
 
-"""
-TODO: Hier weiter aufräumen
-"""
+
 def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
-                 t_steps, freqnr, gauss_list_ext, r_arr, sigma_h, sigma_l,
-                 path='data/helios_1/ns=True/rikitake/res=100_freqnr=3601'):
+                 r_arr, sigma_h, sigma_l, t_steps, freqnr, resolution,
+                 gauss_list_ext, path):
     # calculation of rikitake-factor for each selected frequency for both
     # high and low condutivity model.
     try:
         # load precalculated data from files if available
-        rikitake_h_re = loadtxt(path + '_h_re.gz')
-        rikitake_h_im = loadtxt(path + '_h_im.gz')
-        rikitake_l_re = loadtxt(path + '_l_re.gz')
-        rikitake_l_im = loadtxt(path + '_l_im.gz')
+        rikitake_h_re = loadtxt(path + str(resolution) + '_freqnr=' \
+                                + str(freqnr) + '_h_re.gz')
+        rikitake_h_im = loadtxt(path + str(resolution) + '_freqnr=' \
+                                + str(freqnr) + '_h_im.gz')
+        rikitake_l_re = loadtxt(path + str(resolution) + '_freqnr=' \
+                                + str(freqnr) + '_l_re.gz')
+        rikitake_l_im = loadtxt(path + str(resolution) + '_freqnr=' \
+                                + str(freqnr) + '_l_im.gz')
 
         rikitake_h_re = rikitake_h_re.reshape((len(gauss_list_ext), freqnr))
         rikitake_h_im = rikitake_h_im.reshape((len(gauss_list_ext), freqnr))
@@ -36,7 +38,7 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
               "factor for the each conductivity profil.")
 
     except OSError:
-        print("No rikitake calculation for this combination of resolution" +
+        print("No rikitake calculation for this combination of resolution " +
               "and freqnr was done yet - Starting the calculation.")
         # calculate the rikitake factor
         rikitake_h_re = zeros((len(gauss_list_ext), t_steps//2 + 1))
@@ -49,18 +51,19 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
 
             for i in range(t_steps//2 + 1):
                 if i in rel_indices and i > 0:
-                    rikitake_h_re[index][i],
-                    rikitake_h_im[index][i],
-                    rikitake_l_re[index][i],
-                    rikitake_l_im[index][i] = rikitake_calc(
-                        l, freq[index][i], r_arr, sigma_h, sigma_l)
+                    result = rikitake_calc(l, freq[index][i], r_arr, sigma_h,
+                                           sigma_l)
+
+                    rikitake_h_re[index][i] = result[0]
+                    rikitake_h_im[index][i] = result[1]
+                    rikitake_l_re[index][i] = result[2]
+                    rikitake_l_im[index][i] = result[3]
 
         print("Finished calculating the rikitake factor parts.")
 
         # save for runtime purposes on mulitple runs
-        rikitake_save(
-            rikitake_h_re, rikitake_h_im, rikitake_l_re, rikitake_l_im, path
-            )
+        rikitake_save(resolution, freqnr, rikitake_h_re, rikitake_h_im,
+                      rikitake_l_re, rikitake_l_im, path)
 
     amp_rikitake_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
                            dtype=complex)
@@ -193,14 +196,19 @@ def rikitake(l, k, r):
     return -l / (l+1) * (zaehler1 + zaehler2 + l) / (nenner1 + nenner2 + l+1)
 
 
-def rikitake_save(high_real, high_imag, low_real, low_imag,
-                  path='data/helios_1/ns=True/rikitake/res=100_freqnr=3601'):
+def rikitake_save(resolution, freqnr, high_real, high_imag, low_real, low_imag,
+                  path):
     """
     Save the rikitakefactor for a high and low conductivity profile for a given
     resolution and number of frequencies from the fft.
 
     Parameters
     ----------
+    resolution : int
+        Number of distances for which the magnetic field is calculated for.
+    freqnr : int
+        Number of frequencies returned.
+        Can be used to determine influence of sampled number of frequencies.
     high_real : numpy.ndarray.float64
         Real part of the rikitake factor for the high conductivity model.
     high_imag : numpy.ndarray.float64
@@ -209,24 +217,27 @@ def rikitake_save(high_real, high_imag, low_real, low_imag,
         Real part of the rikitake factor for the low conductivity model.
     low_imag : numpy.ndarray.float64
         Imaginary part of the rikitake factor for the low conductivity model.
-    path : string, optional
+    path : string
         Path to the directory where the values are stored.
-        The default is 'data/helios_1/ns=True/rikitake/res=100_freqnr=3601'.
 
     Returns
     -------
     None.
 
     """
-    savetxt(path + '_h_re.gz', high_real.ravel())
-    savetxt(path + '_h_im.gz', high_imag.ravel())
-    savetxt(path + '_l_re.gz', low_real.ravel())
-    savetxt(path + '_l_im.gz', low_imag.ravel())
+    savetxt(path + str(resolution) + '_freqnr=' + str(freqnr) \
+            + '_h_re.gz', high_real.ravel())
+    savetxt(path + str(resolution) + '_freqnr=' + str(freqnr) \
+            + '_h_im.gz', high_imag.ravel())
+    savetxt(path + str(resolution) + '_freqnr=' + str(freqnr) \
+            + '_l_re.gz', low_real.ravel())
+    savetxt(path + str(resolution) + '_freqnr=' + str(freqnr) \
+            + '_l_im.gz', low_imag.ravel())
 
     print("Finished saving the rikitake factor parts to file.")
 
 
-def rikitake_plot(l, f, riki_h, riki_l, amp, color1, color2):
+def rikitake_plot(l, freq, riki_h, riki_l, amp, color1, color2):
     # creation of the frequencies
     fmin, fmax = 1E-15, 1E5
     omega_min, omega_max = 2. * pi * fmin, 2. * pi * fmax
@@ -265,8 +276,8 @@ def rikitake_plot(l, f, riki_h, riki_l, amp, color1, color2):
              label="$\\sigma_{low}$,  $l=" + str(l) + "$", linewidth='2')
 
     # # add alpha plot of calculated data
-    plt.scatter(f, riki_h, alpha=amp/max(amp), color='red', s=20)
-    plt.scatter(f, riki_l, alpha=amp/max(amp), color='green', s=20)
+    plt.scatter(freq, riki_h, alpha=amp/max(amp), color='red', s=20)
+    plt.scatter(freq, riki_l, alpha=amp/max(amp), color='green', s=20)
 
     plt.grid(which='major', axis='both', linestyle='-', color='lavender')
     plt.xlabel('$f$ [$Hz$]')
@@ -312,7 +323,26 @@ def rikitake_plot(l, f, riki_h, riki_l, amp, color1, color2):
     plt.savefig('plots/alpha_plot_l=' + str(l) + '.jpg', dpi=600)
 
 
-def transferfunction(l):
+def rikitake_transferfunction(l, known_excitements=False, spec_freq=False):
+    """
+    Plots the amplitude of the rikitakefactor for a wide frequency range.
+
+    Parameters
+    ----------
+    l : int
+        Order of the magnetic field.
+    known_excitements : boolean, optional
+        Decides if some known excitements are added as vlines to the plot.
+        The default is False.
+    spec_freq : boolean, optional
+        Decides if the specific frequencies are added as vlnies to the plot.
+        The default is False.
+
+    Returns
+    -------
+    None.
+
+    """
     # creation of the frequencies
     fmin, fmax = 1E-15, 1E5
     omega_min, omega_max = 2. * pi * fmin, 2. * pi * fmax
@@ -354,61 +384,76 @@ def transferfunction(l):
     plt.ylim(-0.035, l/(l+1) + 0.05)
     plt.legend(loc='upper left')
 
-# =============================================================================
-#     # # known excitements
-#     # Liljeblad and Karlsson (2017)
-#     # KH-Oscillations
-#     f30mHz = 30E-3
-#     # plt.vlines(f30mHz, 0, l/(l+1), colors='forestgreen', linestyle='dotted')
-#     plt.annotate('30mHz', (f30mHz*0.8, -0.03), color='forestgreen')
-# 
-#     # Dungey-cycle
-#     f2min = 1/(2*60)
-#     plt.vlines(f2min, 0, l/(l+1), colors='firebrick', linestyle='dotted')
-#     plt.annotate('2min', (f2min*0.1, -0.03), color='firebrick')
-# 
-#     # solar rotation
-#     f642h = 1/(642*3600)
-#     plt.vlines(f642h, 0, l/(l+1), colors='darkorchid', linestyle='dotted')
-#     plt.annotate('642h', (f642h*2.2, -0.03), color='darkorchid')
-# 
-#     # planetary rotation
-#     f44 = 1/(44*24*3600)
-#     plt.vlines(f44, 0, l/(l+1), colors='sky#1f77b4', linestyle='dotted')
-#     plt.annotate('44d', (f44*0.3, -0.03), color='sky#1f77b4')
-# 
-#     f88 = 1/(88*24*3600)
-#     plt.vlines(f88, 0, l/(l+1), colors='black', linestyle='dotted')
-#     plt.annotate('88d', (f88*0.05, -0.03), color='black')
-# 
-#     # solar cicle
-#     f22y = 1/(22*365*24*3600)
-#     plt.vlines(f22y, 0, l/(l+1), colors='goldenrod', linestyle='dotted')
-#     plt.annotate('22y', (f22y*0.4, -0.03), color='goldenrod')
-# =============================================================================
+    if known_excitements:
+        # Liljeblad and Karlsson (2017)
+        # KH-Oscillations
+        f30mHz = 30E-3
+        plt.vlines(f30mHz, 0, l/(l+1), colors='forestgreen',linestyle='dotted')
+        plt.annotate('30mHz', (f30mHz*0.8, -0.03), color='forestgreen')
 
-    # # specific excitations for the different layers of the conductivity model
+        # Dungey-cycle
+        f2min = 1/(2*60)
+        plt.vlines(f2min, 0, l/(l+1), colors='firebrick', linestyle='dotted')
+        plt.annotate('2min', (f2min*0.1, -0.03), color='firebrick')
 
-    # 4 for high profile in blue
-    plt.vlines(1.5 * pow(10, -15), -0.1, l/(l+1), colors='#1f77b4', linestyle='dotted')
-    plt.annotate('$f_A$', (1.5 * pow(10, -15), -0.03), color='#1f77b4', size=12)
-    plt.vlines(pow(10, -9), -0.1, l/(l+1), colors='#1f77b4', linestyle='dotted')
-    plt.annotate('$f_B$', (pow(10, -9), -0.03), color='#1f77b4', size=12)
-    plt.vlines(2 * pow(10, -8), -0.1, l/(l+1), colors='#1f77b4', linestyle='dotted')
-    plt.annotate('$f_{C/D}$', (2 * pow(10, -8), -0.03), color='#1f77b4', size=12)
-    plt.vlines(pow(10, -4), -0.1, l/(l+1), colors='#1f77b4', linestyle='dotted')
-    plt.annotate('$f_E$', (pow(10, -4), -0.03), color='#1f77b4', size=12)
-    # 5 for low profile in orange
-    plt.vlines(5 * pow(10, -14), -0.1, l/(l+1), colors='#ff7f0e', linestyle='dotted')
-    plt.annotate('$f_A$', (5 * pow(10, -14), -0.03), color='#ff7f0e', size=12)
-    plt.vlines(5 * pow(10, -9), -0.1, l/(l+1), colors='#ff7f0e', linestyle='dotted')
-    plt.annotate('$f_B$', (5 * pow(10, -9), -0.03), color='#ff7f0e', size=12)
-    plt.vlines(pow(10, -5), -0.1, l/(l+1), colors='#ff7f0e', linestyle='dotted')
-    plt.annotate('$f_C$', (pow(10, -5), -0.03), color='#ff7f0e', size=12)
-    plt.vlines(5 * pow(10, -4), -0.1, l/(l+1), colors='#ff7f0e', linestyle='dotted')
-    plt.annotate('$f_D$', (5 * pow(10, -4), -0.03), color='#ff7f0e', size=12)
-    plt.vlines(pow(10, 1), -0.1, l/(l+1), colors='#ff7f0e', linestyle='dotted')
-    plt.annotate('$f_E$', (pow(10, 1), -0.03), color='#ff7f0e', size=12)
+        # solar rotation
+        f642h = 1/(642*3600)
+        plt.vlines(f642h, 0, l/(l+1), colors='darkorchid', linestyle='dotted')
+        plt.annotate('642h', (f642h*2.2, -0.03), color='darkorchid')
+
+        # planetary rotation
+        f44 = 1/(44*24*3600)
+        plt.vlines(f44, 0, l/(l+1), colors='sky#1f77b4', linestyle='dotted')
+        plt.annotate('44d', (f44*0.3, -0.03), color='sky#1f77b4')
+
+        f88 = 1/(88*24*3600)
+        plt.vlines(f88, 0, l/(l+1), colors='black', linestyle='dotted')
+        plt.annotate('88d', (f88*0.05, -0.03), color='black')
+
+        # solar cicle
+        f22y = 1/(22*365*24*3600)
+        plt.vlines(f22y, 0, l/(l+1), colors='goldenrod', linestyle='dotted')
+        plt.annotate('22y', (f22y*0.4, -0.03), color='goldenrod')
+
+    if spec_freq:
+        # 4 for high profile in blue
+        plt.vlines(1.5 * pow(10, -15), -0.1, l/(l+1), colors='#1f77b4',
+                   linestyle='dotted')
+        plt.annotate('$f_A$', (1.5 * pow(10, -15), -0.03), color='#1f77b4',
+                     size=12)
+        plt.vlines(pow(10, -9), -0.1, l/(l+1), colors='#1f77b4',
+                   linestyle='dotted')
+        plt.annotate('$f_B$', (pow(10, -9), -0.03), color='#1f77b4',
+                     size=12)
+        plt.vlines(2 * pow(10, -8), -0.1, l/(l+1), colors='#1f77b4',
+                   linestyle='dotted')
+        plt.annotate('$f_{C/D}$', (2 * pow(10, -8), -0.03), color='#1f77b4',
+                     size=12)
+        plt.vlines(pow(10, -4), -0.1, l/(l+1), colors='#1f77b4',
+                   linestyle='dotted')
+        plt.annotate('$f_E$', (pow(10, -4), -0.03), color='#1f77b4',
+                     size=12)
+        # 5 for low profile in orange
+        plt.vlines(5 * pow(10, -14), -0.1, l/(l+1), colors='#ff7f0e',
+                   linestyle='dotted')
+        plt.annotate('$f_A$', (5 * pow(10, -14), -0.03), color='#ff7f0e',
+                     size=12)
+        plt.vlines(5 * pow(10, -9), -0.1, l/(l+1), colors='#ff7f0e',
+                   linestyle='dotted')
+        plt.annotate('$f_B$', (5 * pow(10, -9), -0.03), color='#ff7f0e',
+                     size=12)
+        plt.vlines(pow(10, -5), -0.1, l/(l+1), colors='#ff7f0e',
+                   linestyle='dotted')
+        plt.annotate('$f_C$', (pow(10, -5), -0.03), color='#ff7f0e',
+                     size=12)
+        plt.vlines(5 * pow(10, -4), -0.1, l/(l+1), colors='#ff7f0e',
+                   linestyle='dotted')
+        plt.annotate('$f_D$', (5 * pow(10, -4), -0.03), color='#ff7f0e',
+                     size=12)
+        plt.vlines(pow(10, 1), -0.1, l/(l+1), colors='#ff7f0e',
+                   linestyle='dotted')
+        plt.annotate('$f_E$', (pow(10, 1), -0.03), color='#ff7f0e',
+                     size=12)
 
     plt.tight_layout()
 

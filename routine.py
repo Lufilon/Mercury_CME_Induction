@@ -84,7 +84,7 @@ riki_dir = case_dir + '/rikitake/resolution=' + str(resolution)
 # =============================================================================
 # load, format and plot data
 t, t_plotting, t_steps, r_hel, R_ss, possible_distances = data_get(
-    mission_dir+file_name, empty_rows, plot=True)
+    mission_dir+file_name, empty_rows, True)
 
 # create angular data for 200x400 points on a sphere.
 num_pts, theta_arr, phi_arr, theta, phi = angular_data(num_theta, num_phi)
@@ -115,8 +115,8 @@ fig_gauss_f, ax_gauss_f_pri = gaussian_f_plot(
 
 # use the rikitake factor to calculate the secondary gauss coefficients
 induced_h, induced_l = rikitake_get(
-    t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices, t_steps, freqnr,
-    gauss_list_ext, r_arr, sigma_h, sigma_l, riki_dir)
+    t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices, r_arr, sigma_h,
+    sigma_l, t_steps, freqnr, resolution, gauss_list_ext, riki_dir)
 
 """
 TODO: Hier weiter

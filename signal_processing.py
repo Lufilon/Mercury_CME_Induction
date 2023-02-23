@@ -6,12 +6,11 @@ Created on Wed Sep 14 16:57:50 2022
 """
 
 from numpy.fft import rfft, rfftfreq
-from numpy import pi, exp, real, angle, zeros, asarray, flip, isin
+from numpy import pi, exp, real, angle, zeros, asarray, flip, isin, dot, newaxis
 import matplotlib.pyplot as plt
 
 
-def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext=[(1, 0), (2, 1)],
-                    freqnr=3601):
+def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext, freqnr):
     """
     Fourier-transform the coefficients to the frequency domain
 
@@ -23,13 +22,11 @@ def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext=[(1, 0), (2, 1)],
         Time since start in seconds.
     t_steps : int
         Number of measurements.
-    gauss_list_ext : list.tupel, optional
+    gauss_list_ext : list.tupel
         List containing gauss coefficients to be analyzed.
-        The default is [(1, 0), (2, 1)].
-    freqnr : int, optional
+    freqnr : int
         Number of frequencies returned.
         Can be used to determine influence of sampled number of frequencies.
-        The default is 3601.
 
     Returns
     -------
@@ -70,7 +67,7 @@ def gaussian_f_to_t():
     return 0
 
 
-def fft_own(t, data, N=3601):
+def fft_own(t, data, N):
     """
     Performs the fast fourier transform on a given set of data.
 
@@ -80,8 +77,8 @@ def fft_own(t, data, N=3601):
         Time since start in seconds.
     data : numpy.ndarray.float64
         Time series of some data.
-    N : int, optional
-        Size of the input data. The default is 3601.
+    N : int
+        Size of the input data.
 
     Returns
     -------
@@ -128,9 +125,10 @@ def rebuild(t, freq, amp, phase):
         Fourier transform of the input signal in the time domaine.
 
     """
-    # Rebuild the initial signal with a reduced amount of frequencies.
-    data_rebuild = amp * exp(0+1j * (2 * pi * freq * t + phase))
-    data_rebuild = sum(real(data_rebuild))
+    # rebuild the initial signal with a reduced amount of frequencies.
+    data_rebuild = amp[:, newaxis] * exp(0+1j * (2 * pi * dot(
+        freq[:, newaxis], t[newaxis, :]) + phase[:, newaxis]))
+    data_rebuild = real(data_rebuild).sum(axis=0)
 
     return data_rebuild
 
