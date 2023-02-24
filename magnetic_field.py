@@ -61,13 +61,13 @@ def magnetic_field_get(possible_distances, R_ss, theta, phi, num_theta, num_phi,
 
     """
     try:
-        print("Importing precalculated magnetic field components with " +
-              "resolution=" + str(resolution) + " if available.")
+        print("If available import precalculated magnetic field components " +
+              "with resolution=" + str(resolution) + " from file.")
         num_pts = num_theta * num_phi
 
-        Br_possible = loadtxt(path + str(resolution) + '_Br.gz')
-        Bt_possible = loadtxt(path + str(resolution) + '_Bt.gz')
-        Bp_possible = loadtxt(path + str(resolution) + '_Bp.gz')
+        Br_possible = loadtxt(path + '_Br.gz')
+        Bt_possible = loadtxt(path + '_Bt.gz')
+        Bp_possible = loadtxt(path + '_Bp.gz')
 
         Br_possible = Br_possible.reshape((resolution, num_pts))
         Bt_possible = Bt_possible.reshape((resolution, num_pts))
@@ -79,7 +79,6 @@ def magnetic_field_get(possible_distances, R_ss, theta, phi, num_theta, num_phi,
     except OSError:
         print("No magnetic field for this r_hel resolution was calculated yet"
               + " - Starting the calculation.")
-
         # di_int and ns_int are the same for every R_ss distance
         try:
             Br_di_int = loadtxt(runtime_dir + 'Br_di_int.gz')
@@ -135,7 +134,7 @@ def magnetic_field_get(possible_distances, R_ss, theta, phi, num_theta, num_phi,
         print("Finished calculating field components for given resolution.")
 
         magnetic_field_save(Br_possible, Bt_possible, Bp_possible,
-                           path + str(resolution))
+                           path)
 
     magnetic_field_plot(Br_possible, Bt_possible, Bp_possible, R_ss, theta, phi,
                        num_theta, num_phi, resolution, settings)

@@ -9,17 +9,17 @@ Created on Tue Sep 13 10:24:28 2022
 from data_input import data_get
 from angular_data import angular_data
 from magnetic_field import magnetic_field_get
-from SHA_by_integration import SHA_by_integration_get, SHA_by_integration_plot
-from signal_processing import gaussian_t_to_f, gaussian_f_to_t, gaussian_f_plot
-from rikitake import rikitake_get, rikitake_plot
+from SHA_by_integration import SHA_by_integration_get
+from signal_processing import gaussian_t_to_f, gaussian_f_to_t
+from rikitake import rikitake_get, rikitake_plot, rikitake_transferfunction
 from legendre_polynomials import P_dP
+from plotting import plot_simple, plot_gauss_solo, plot_gauss_twinx
 
 # third party packages
 from time import time
-from numpy import pi, nan, hypot, exp, arctan2, sin, cos, savetxt, loadtxt
+from numpy import pi, nan, hypot, exp, sin, cos
 from numpy import array, linspace, zeros, real
 import matplotlib.pyplot as plt
-plt.rcParams.update({'font.size': 10})
 
 # get time to obtaine the runtime of the routine
 t0 = time()
@@ -102,94 +102,59 @@ coeff_ext_t = SHA_by_integration_get(
     Bt_possible, Bp_possible, num_theta, num_phi, degree_max,
     resolution, ref_radius, ana_radius, gauss_t_dir)
 
-# plot the primary gaussian
-fig_gauss_t, ax_gauss_t_pri = SHA_by_integration_plot(
-    t_plotting, t_steps, gauss_list_ext, coeff_ext_t)
+# plot the time dependant primary gauss coefficients
+coeff_ext_t_plotting = zeros((len(gauss_list_ext), t_steps))
+for l, m in gauss_list_ext:
+    index = gauss_list_ext.index((l, m))
+    coeff_ext_t_plotting[index] = coeff_ext_t[:, m, l]
+
+fig_gauss_t, ax_gauss_t_pri = plot_gauss_solo(
+    t_plotting, coeff_ext_t_plotting, gauss_list_ext, xscale=None,
+    yscale='linear', xlabel=None, ylabel="$A_\\mathrm{pri}$ $[nT]$",
+    loc='lower left', title="Primary Gauss coefficients over time",
+    name="gaussian_t_pri.jpeg", sharex=True)
 
 # fourier-transform the time dependant gauss coefficients
 freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices = gaussian_t_to_f(
     coeff_ext_t, t, t_steps, gauss_list_ext, freqnr)
 
-# plot the freq dependant gauss coefficients
-fig_gauss_f, ax_gauss_f_pri = gaussian_f_plot(
-    freq, coeff_ext_f_amp, gauss_list_ext)
+# plot the freq dependant primary gauss coefficients
+fig_gauss_f, ax_gauss_f_pri = plot_gauss_solo(
+    freq[0, 1:], coeff_ext_f_amp[:, 1:], gauss_list_ext, xscale='log',
+    yscale='linear', xlabel="$f$ $[Hz]$", ylabel="$A_\\mathrm{pri}$ $[nT]$",
+    loc='upper center', title="Primary Gauss coefficients over freq.",
+    name='gaussian_f_pri.jpeg', sharex=True)
 
 # use the rikitake factor to calculate the secondary gauss coefficients
-induced_h, induced_l = rikitake_get(
+amp_riki_h, amp_riki_l, phase_riki_h, phase_riki_l, induced_h, induced_l = rikitake_get(
     t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices, r_arr, sigma_h,
     sigma_l, t_steps, freqnr, resolution, gauss_list_ext, riki_dir)
+
+# plot the freq dependant secondary gauss coefficients
+ax_gauss_f_sec = plot_gauss_twinx(
+    fig_gauss_f, ax_gauss_f_pri, freq[0, 1:], real(amp_riki_h[:, 1:]),
+    real(amp_riki_l[:, 1:]), gauss_list_ext, ylabel="$A_\\mathrm{sec}$ $[nT]$",
+    loc='upper right', name='gaussian_f_sec.jpeg',
+    title="Primary and secondary Gauss coefficients over freq.", axvline=True)
+
+# plot the time dependant secondary gauss coefficients
+ax_gauss_t_sec = plot_gauss_twinx(
+    fig_gauss_t, ax_gauss_t_pri, t_plotting, induced_h, induced_l,
+    gauss_list_ext, ylabel="$A_\\mathrm{sec}$ $[nT]$", loc='lower right',
+    name='gaussian_t_sec.jpeg',
+    title="Primary and secondary Gauss coefficients over time.", axvline=False)
+
+# plot the phase of the rikitake factor
+fig_riki_phase, ax_riki_phase = plot_simple(
+    freq[0, 1:], real(phase_riki_h[:, 1:]), real(phase_riki_l[:, 1:]),
+    gauss_list_ext, xscale='log', yscale='linear', xlabel="$f$ [$Hz$]",
+    ylabel="$\\varphi$ [$rad$]", loc='best',
+    title="Argument of the rikitake factor", name="rikitake_phase.jpeg")
 
 """
 TODO: Hier weiter
 """
 if False:
-    color = iter(plt.cm.prism(linspace(0, 0.5, 4)))
-    # add to time-dependant plot
-    ax_gauss_t_induced = array(
-        [a.twinx() for a in ax_gauss_t_inducing.ravel()]).reshape(
-            ax_gauss_t_inducing.shape)
-
-    # add to frequency-dependant plot
-    ax_gauss_f_induced = array(
-        [a.twinx() for a in ax_gauss_f_inducing.ravel()]).reshape(
-            ax_gauss_f_inducing.shape)
-
-    # phase of rikitake
-    fig_rikitake_phi, ax_rikitake_phi = plt.subplots()
-    ax_rikitake_phi.set_title("Argument of the Rikitake factor")
-
-    for l, m in gauss_list_ext:
-        index = gauss_list_ext.index((l, m))
-        
-        color1 = next(color)
-        color2 = next(color)
-
-        ax_gauss_t_induced[index].plot(
-            t_plotting, induced_h[index],
-            label="$\\sigma_{high}$",
-            color=color1)
-        ax_gauss_t_induced[index].plot(
-            t_plotting, induced_l[index],
-            label="$\\sigma_{low}$",
-            color=color2)
-
-        ax_gauss_f_induced[index].plot(
-            f[index][1:], real(amp_rikitake_h[index][1:]),
-            label="$\\sigma_{high}$",
-            color='red')
-        ax_gauss_f_induced[index].plot(
-            f[index][1:], real(amp_rikitake_l[index][1:]),
-            label="$\\sigma_{low}$",
-            color='green')
-
-        ax_rikitake_phi.plot(
-            f[index][1:], real(phase_rikitake_h[index][1:]),
-            label="$\\sigma_{high}$, $l=" + str(l) + ", m=" + str(m) + "$")
-        ax_rikitake_phi.plot(
-            f[index][1:], real(phase_rikitake_l[index][1:]),
-            label="$\\sigma_{low}$,  $l=" + str(l) + ", m=" + str(m) + "$")
-
-        ax_gauss_f_induced[index].set_xscale('log')
-        ax_rikitake_phi.set_xscale('log')
-        ax_gauss_t_induced[index].set_ylabel("$A_\\mathrm{sec}$ $[nT]$")
-        ax_gauss_f_induced[index].set_ylabel("$A_\\mathrm{sec}$ $[nT]$")
-        ax_gauss_t_induced[index].legend(loc='lower right')
-        ax_gauss_f_induced[index].legend(loc='upper right')
-        ax_rikitake_phi.legend()
-
-    ax_rikitake_phi.set_xlabel("$f$ [$Hz$]")
-    ax_rikitake_phi.set_ylabel("$\\varphi$ [$rad$]")
-
-    ax_gauss_f_induced[1].annotate(
-        '$f_1$', (f[1][1]+5E-7, ax_gauss_f_induced[1].get_ylim()[0]+0.2))
-
-    fig_gauss_t_inducing.savefig(
-        'plots/gaussian_t_' + str(resolution) + '.jpg', dpi=600)
-    fig_gauss_f_inducing.savefig(
-        'plots/gaussian_f_' + str(resolution) + '.jpg', dpi=600)
-    fig_rikitake_phi.savefig(
-        'plots/rikitake_phase_' + str(resolution) + '.jpg', dpi=600)
-
     color = iter(plt.cm.prism(linspace(0, 0.5, 4)))
     # plot transfer function for each degree up to rikitakedegree
     # including alpha plot for frequencies in given data
@@ -211,9 +176,9 @@ if False:
         noch sehr quick and dirty
     """
     # plot the transit time of the induced signal
-    T_h = [real(phase_rikitake_h[index][1:])/(2*pi*f[index][1:])
+    T_h = [real(phase_riki_h[index][1:])/(2*pi*f[index][1:])
            for index in range(len(gauss_list_ext))]
-    T_l = [real(phase_rikitake_l[index][1:])/(2*pi*f[index][1:])
+    T_l = [real(phase_riki_l[index][1:])/(2*pi*f[index][1:])
            for index in range(len(gauss_list_ext))]
 
     plt.figure("Transit time of the primary signal")
@@ -242,11 +207,11 @@ if False:
     B_theta_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
     B_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
 
-    phase_rikitake_h_temp = phase_rikitake_h.copy()
-    phase_rikitake_l_temp = phase_rikitake_l.copy()
+    phase_riki_h_temp = phase_riki_h.copy()
+    phase_riki_l_temp = phase_riki_l.copy()
 
-    amp_rikitake_h_temp = amp_rikitake_h.copy()
-    amp_rikitake_l_temp = amp_rikitake_l.copy()
+    amp_riki_h_temp = amp_riki_h.copy()
+    amp_riki_l_temp = amp_riki_l.copy()
 
     induced_h_phase0 = induced_h.copy()
     induced_l_phase0 = induced_l.copy()
@@ -255,25 +220,25 @@ if False:
         index = gauss_list_ext.index((l, m))
 
     # for the magnetic field conductivity difference plot
-        phase_rikitake_h_temp[index] = phase_rikitake_h[index].copy()
-        phase_rikitake_h_temp[index][1] = 0
-        phase_rikitake_l_temp[index] = phase_rikitake_l[index].copy()
-        phase_rikitake_l_temp[index][1] = 0
+        phase_riki_h_temp[index] = phase_riki_h[index].copy()
+        phase_riki_h_temp[index][1] = 0
+        phase_riki_l_temp[index] = phase_riki_l[index].copy()
+        phase_riki_l_temp[index][1] = 0
 
-        amp_rikitake_h_temp[index] = coeff_ext_f_amp[index] * hypot(
+        amp_riki_h_temp[index] = coeff_ext_f_amp[index] * hypot(
             rikitake_h_real[index], rikitake_h_imag[index])
-        amp_rikitake_h_temp[index] = amp_rikitake_h[index] * exp(
-            0+1j * phase_rikitake_h_temp[index])
+        amp_riki_h_temp[index] = amp_riki_h[index] * exp(
+            0+1j * phase_riki_h_temp[index])
 
-        amp_rikitake_l_temp[index] = coeff_ext_f_amp[index] * hypot(
+        amp_riki_l_temp[index] = coeff_ext_f_amp[index] * hypot(
             rikitake_l_real[index], rikitake_l_imag[index])
-        amp_rikitake_l_temp[index] = amp_rikitake_l[index] * exp(
-            0+1j * phase_rikitake_l_temp[index])
+        amp_riki_l_temp[index] = amp_riki_l[index] * exp(
+            0+1j * phase_riki_l_temp[index])
 
         induced_h_phase0[index] = rebuild(
-            t, f[index], amp_rikitake_h_temp[index], phase[index])
+            t, f[index], amp_riki_h_temp[index], phase[index])
         induced_l_phase0[index] = rebuild(
-            t, f[index], amp_rikitake_l_temp[index], phase[index])
+            t, f[index], amp_riki_l_temp[index], phase[index])
 
         P_lm, dP_lm = P_dP(l, m, cos(theta_arr))
         dP_lm[0] = nan  # fragment caused by legendre polynomial
@@ -482,3 +447,5 @@ plt.close('all')  # closes all figures
 
 # fig_400.savefig(
 #     'plots/400km_resolution.jpg', dpi=600)
+
+# transferfunction(2)

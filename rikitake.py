@@ -16,49 +16,9 @@ mpmath.mp.dps = 6
 def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
                  r_arr, sigma_h, sigma_l, t_steps, freqnr, resolution,
                  gauss_list_ext, path):
-    """
-    Calculate the frequency dependant gauss coefficients of the secondary field
-    using the rikitake factor and based on a model of the planets interior.
+    # Calculate the frequency dependant gauss coefficients of the secondary field
+    # using the rikitake factor and based on a model of the planets interior.
 
-    Parameters
-    ----------
-    t : numpy.ndarray.int
-        DESCRIPTION.
-    freq : TYPE
-        DESCRIPTION.
-    coeff_ext_f_amp : TYPE
-        DESCRIPTION.
-    coeff_ext_f_phase : TYPE
-        DESCRIPTION.
-    rel_indices : TYPE
-        DESCRIPTION.
-    r_arr : TYPE
-        DESCRIPTION.
-    sigma_h : TYPE
-        DESCRIPTION.
-    sigma_l : TYPE
-        DESCRIPTION.
-    t_steps : TYPE
-        DESCRIPTION.
-    freqnr : TYPE
-        DESCRIPTION.
-    resolution : TYPE
-        DESCRIPTION.
-    gauss_list_ext : TYPE
-        DESCRIPTION.
-    path : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    induced_h : TYPE
-        DESCRIPTION.
-    induced_l : TYPE
-        DESCRIPTION.
-
-    """
-    # calculation of rikitake-factor for each selected frequency for both
-    # high and low condutivity model.
     try:
         # load precalculated data from files if available
         rikitake_h_re = loadtxt(path + str(resolution) + '_freqnr=' \
@@ -76,7 +36,7 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
         rikitake_l_im = rikitake_l_im.reshape((len(gauss_list_ext), freqnr))
 
         print("Finished importing the real and imag parts of the rikitake " +
-              "factor for the each conductivity profil.")
+              "factor for both conductivity profiles.")
 
     except OSError:
         print("No rikitake calculation for this combination of resolution " +
@@ -106,13 +66,13 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
         rikitake_save(resolution, freqnr, rikitake_h_re, rikitake_h_im,
                       rikitake_l_re, rikitake_l_im, path)
 
-    amp_rikitake_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
+    amp_riki_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
                            dtype=complex)
-    amp_rikitake_l = zeros((len(gauss_list_ext), t_steps//2 + 1),
+    amp_riki_l = zeros((len(gauss_list_ext), t_steps//2 + 1),
                            dtype=complex)
-    phase_rikitake_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
+    phase_riki_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
                              dtype=complex)
-    phase_rikitake_l = zeros((len(gauss_list_ext), t_steps//2 + 1),
+    phase_riki_l = zeros((len(gauss_list_ext), t_steps//2 + 1),
                              dtype=complex)
     induced_h = zeros((len(gauss_list_ext), t_steps))
     induced_l = zeros((len(gauss_list_ext), t_steps))
@@ -120,27 +80,27 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
 
-        phase_rikitake_h[index] = arctan2(
+        phase_riki_h[index] = arctan2(
             rikitake_h_im[index], rikitake_h_re[index])
-        phase_rikitake_l[index] = arctan2(
+        phase_riki_l[index] = arctan2(
             rikitake_l_im[index], rikitake_l_re[index])
 
-        amp_rikitake_h[index] = coeff_ext_f_amp[index] * hypot(
+        amp_riki_h[index] = coeff_ext_f_amp[index] * hypot(
             rikitake_h_re[index], rikitake_h_im[index]) * exp(
-                0+1j * phase_rikitake_h[index])
-        amp_rikitake_l[index] = coeff_ext_f_amp[index] * hypot(
+                0+1j * phase_riki_h[index])
+        amp_riki_l[index] = coeff_ext_f_amp[index] * hypot(
             rikitake_l_re[index], rikitake_l_im[index]) * exp(
-                0+1j * phase_rikitake_l[index])
+                0+1j * phase_riki_l[index])
 
         induced_h[index] = rebuild(
-            t, freq[index], amp_rikitake_h[index], coeff_ext_f_phase[index])
+            t, freq[index], amp_riki_h[index], coeff_ext_f_phase[index])
         induced_l[index] = rebuild(
-            t, freq[index], amp_rikitake_l[index], coeff_ext_f_phase[index])
+            t, freq[index], amp_riki_l[index], coeff_ext_f_phase[index])
 
     print("Finished performing the inverse FFT of the rikitake modified " +
           "freq-dependant Gauss coefficients.")
 
-    return induced_h, induced_l
+    return amp_riki_h, amp_riki_l, phase_riki_h, phase_riki_l, induced_h, induced_l
 
 
 def rikitake_calc(l, freq, r_arr, sigma_h, sigma_l):

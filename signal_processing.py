@@ -6,7 +6,8 @@ Created on Wed Sep 14 16:57:50 2022
 """
 
 from numpy.fft import rfft, rfftfreq
-from numpy import pi, exp, real, angle, zeros, asarray, flip, isin, dot, newaxis
+from numpy import pi, exp, real, angle
+from numpy import zeros, asarray, flip, isin, dot, newaxis, array, linspace
 import matplotlib.pyplot as plt
 
 
@@ -131,50 +132,3 @@ def rebuild(t, freq, amp, phase):
     data_rebuild = real(data_rebuild).sum(axis=0)
 
     return data_rebuild
-
-
-def gaussian_f_plot(freq, coeff_ext_f_amp, gauss_list_ext):
-    """
-    Plot the primary gaussian coefficients in the frequency domaine.
-
-    Parameters
-    ----------
-    req : numpy.ndarray.float64
-        Frequency of the fourier transformed signal.
-    coeff_ext_f_amp : numpy.ndarray.float64
-        Amplitude of the fourier transformed signal.
-    gauss_list_ext : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    fig_gauss_f : matplotlib.figure
-        Figure object for the freq dependant Gauss coefficients.
-    ax_gauss_f_pri : matplotlib.axis
-        Axis for the primary freq dependant Gauss coefficients.
-
-    """
-    fig_gauss_f, ax_gauss_f_pri = plt.subplots(
-        len(gauss_list_ext), sharex=True)
-    plt.subplots_adjust(hspace=0)
-    ax_gauss_f_pri[0].set_title(
-        "Freq-dependant primary and secondary Gauss coefficients")
-
-    for l, m in gauss_list_ext:
-        index = gauss_list_ext.index((l, m))
-
-        ax_gauss_f_pri[index].plot(
-            freq[index][1:], coeff_ext_f_amp[index][1:],
-            label="$g_{" + str(l) + str(m) + ", \\mathrm{pri}}$")
-
-        ax_gauss_f_pri[index].set_xscale('log')
-        ax_gauss_f_pri[index].set_ylabel("$A_\\mathrm{pri}$ $[nT]$")
-        ax_gauss_f_pri[index].legend(loc='upper center')
-        ax_gauss_f_pri[index].axvline(
-            x=freq[index][1], color='goldenrod', linestyle='dotted')
-
-    ax_gauss_f_pri[1].set_xlabel("$f$ $[Hz]$")
-
-    plt.savefig('plots/gaussian_f_pri.jpeg', dpi=600)
-    
-    return fig_gauss_f, ax_gauss_f_pri
