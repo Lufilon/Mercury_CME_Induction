@@ -114,9 +114,6 @@ def data_get(path, empty_rows, resolution, plot=False):
 
     # distances for which the magnetic field is calculated
     possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
-    print(nanmin(r_hel))
-    print(nanmax(r_hel))
-    print(possible_distances)
 
     if plot:
         data_plot(t_plotting, N_p, v, R_ss)

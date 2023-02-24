@@ -101,8 +101,7 @@ def SHA_by_integration_get(
     # assign the values to the data points with the smallest deviation
     coeff_ext_t = zeros((t_steps, degree_max+1, degree_max+1))
 
-    nearest_distance_index = abs(
-        possible_distances - r_hel[:, newaxis]).argmin(axis=1)
+    nearest_distance_index = abs(r_hel - possible_distances).argmin(axis=1)
 
     coeff_ext_t = coeff_ext_t_possible[nearest_distance_index]
 

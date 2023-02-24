@@ -46,6 +46,8 @@ di_val = 50.
 # maximum degree for the SHA
 degree_max = 2
 
+# radius for the reference shell that determines the inner and outer region
+ref_radius = R_M
 # radius where to evaluate via the SHA
 ana_radius = R_M
 
@@ -92,14 +94,13 @@ num_pts, theta_arr, phi_arr, theta, phi = angular_data(num_theta, num_phi)
 # calculate the magnetic field via the kth22-modell and plot it
 Br_possible, Bt_possible, Bp_possible = magnetic_field_get(
     possible_distances, R_ss, theta, phi, num_theta, num_phi, resolution,
-    settings, True, runtime_dir,
-    path='data/helios_1/ns=True/magnetic/resolution=')
+    settings, True, runtime_dir, magn_dir)
 
 # calculate the time dependant Gauss coefficients via the SHA
 coeff_ext_t = SHA_by_integration_get(
     theta_arr, phi_arr, r_hel, possible_distances, t_steps, Br_possible,
     Bt_possible, Bp_possible, num_theta, num_phi, degree_max,
-    resolution, ref_radius=R_M, ana_radius=R_M, path=gauss_t_dir)
+    resolution, ref_radius, ana_radius, gauss_t_dir)
 
 # plot the primary gaussian
 fig_gauss_t, ax_gauss_t_pri = SHA_by_integration_plot(
