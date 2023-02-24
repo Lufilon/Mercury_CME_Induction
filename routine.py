@@ -84,7 +84,7 @@ riki_dir = case_dir + '/rikitake/resolution=' + str(resolution)
 # =============================================================================
 # load, format and plot data
 t, t_plotting, t_steps, r_hel, R_ss, possible_distances = data_get(
-    mission_dir+file_name, empty_rows, True)
+    mission_dir+file_name, empty_rows, resolution, True)
 
 # create angular data for 200x400 points on a sphere.
 num_pts, theta_arr, phi_arr, theta, phi = angular_data(num_theta, num_phi)
@@ -121,7 +121,7 @@ induced_h, induced_l = rikitake_get(
 """
 TODO: Hier weiter
 """
-if PLOTRIKITAKE:
+if False:
     color = iter(plt.cm.prism(linspace(0, 0.5, 4)))
     # add to time-dependant plot
     ax_gauss_t_induced = array(

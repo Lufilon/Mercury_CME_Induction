@@ -16,6 +16,47 @@ mpmath.mp.dps = 6
 def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
                  r_arr, sigma_h, sigma_l, t_steps, freqnr, resolution,
                  gauss_list_ext, path):
+    """
+    Calculate the frequency dependant gauss coefficients of the secondary field
+    using the rikitake factor and based on a model of the planets interior.
+
+    Parameters
+    ----------
+    t : numpy.ndarray.int
+        DESCRIPTION.
+    freq : TYPE
+        DESCRIPTION.
+    coeff_ext_f_amp : TYPE
+        DESCRIPTION.
+    coeff_ext_f_phase : TYPE
+        DESCRIPTION.
+    rel_indices : TYPE
+        DESCRIPTION.
+    r_arr : TYPE
+        DESCRIPTION.
+    sigma_h : TYPE
+        DESCRIPTION.
+    sigma_l : TYPE
+        DESCRIPTION.
+    t_steps : TYPE
+        DESCRIPTION.
+    freqnr : TYPE
+        DESCRIPTION.
+    resolution : TYPE
+        DESCRIPTION.
+    gauss_list_ext : TYPE
+        DESCRIPTION.
+    path : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    induced_h : TYPE
+        DESCRIPTION.
+    induced_l : TYPE
+        DESCRIPTION.
+
+    """
     # calculation of rikitake-factor for each selected frequency for both
     # high and low condutivity model.
     try:
@@ -103,6 +144,29 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
 
 
 def rikitake_calc(l, freq, r_arr, sigma_h, sigma_l):
+    """
+    Calculated the complexe rikitake factor for a given range of frequencies, 
+    degree of magnetic field and conductivity model.
+
+    Parameters
+    ----------
+    l : int
+        Magnetic field degree.
+    freq : numpy.ndarray.float64
+        Frequencies that the rikitake factor is evaluated at.
+    r_arr : numpy.ndarray.float64
+        The radii of the planetary layers.
+    sigma_h : numpy.ndarray.float64
+        The low conductivity profile of the planetary layers.
+    sigma_l : numpy.ndarray.float64
+        The high conductivity profile of the planetary layers.
+
+    Returns
+    -------
+    numpy.ndarray.float64
+        Real and imaginary part of the rikitake factor for both cond. profiles.
+
+    """
     omega = 2 * pi * freq
 
     k_arr_h = sqrt((0-1j * omega * 4E-7 * pi * sigma_h))

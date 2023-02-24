@@ -13,7 +13,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 
-def data_get(path, empty_rows=0, resolution=100, plot=False):
+def data_get(path, empty_rows, resolution, plot=False):
     """
     Read the (cme)-data and calculate the heliocentric distance and subsolar
     standoff distance, if requested plot them.
@@ -23,11 +23,10 @@ def data_get(path, empty_rows=0, resolution=100, plot=False):
     path : String
         Path to .txt file containing the data.
         Time needs to be in ISO 8601 format, given in regex.
-    empty_rows : int, optional
-        Rows to skip in data file. The default is 0.
-    resolution : int, optional
+    empty_rows : int
+        Rows to skip in data file.
+    resolution : int
         Number of distances for which the magnetic field is calculated for.
-        The default is 100.
     plot : TYPE, boolean
         Plot the data and subsolar standoff distance if required.
         The default is False.
@@ -90,7 +89,7 @@ def data_get(path, empty_rows=0, resolution=100, plot=False):
     T_SOLAR = 4.6E9  # alter der sonne in jahren
     r_hel = sqrt(6.1E-7/p_dyn * (T_SOLAR/1E6)**(-0.67))
 
-    print("Calculated the heliocentric pseudo_distances.")
+    print("Calculated the heliocentric pseudo distance.")
 
     di = 50
     R_M = 1
@@ -109,12 +108,15 @@ def data_get(path, empty_rows=0, resolution=100, plot=False):
     r_hel = DataFrame(r_hel).interpolate(
         method='linear', limit_direction='both').to_numpy()
 
-    print("Calculated the subsolar standoff-distance")
+    print("Calculated the subsolar standoff distance")
 
     t_steps = t.size
 
     # distances for which the magnetic field is calculated
     possible_distances = linspace(nanmin(r_hel), nanmax(r_hel), resolution)
+    print(nanmin(r_hel))
+    print(nanmax(r_hel))
+    print(possible_distances)
 
     if plot:
         data_plot(t_plotting, N_p, v, R_ss)

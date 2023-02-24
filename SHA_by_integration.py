@@ -6,7 +6,7 @@ Created on Tue Sep 13 15:31:28 2022
 """
 
 from math import factorial
-from numpy import sin, cos, sqrt, pi, zeros, savetxt, loadtxt, nan, isnan
+from numpy import sin, cos, sqrt, pi, zeros, savetxt, loadtxt, nan, isnan, newaxis
 from scipy.special import lpmv
 from scipy.integrate import simpson
 import matplotlib.pyplot as plt
@@ -70,8 +70,8 @@ def SHA_by_integration_get(
             resolution, pow(degree_max, 2) // degree_max+1,
             degree_max+1)
 
-        print("Finished importing the time dependant Gauss coefficients"
-              + "with resolution=" + str(resolution) + ".")
+        print("Finished importing the time dependant Gauss coefficients " +
+              "with resolution=" + str(resolution) + ".")
 
     except OSError:
         print("No file for this combination of pseudo_distance resolution " +
@@ -101,13 +101,10 @@ def SHA_by_integration_get(
     # assign the values to the data points with the smallest deviation
     coeff_ext_t = zeros((t_steps, degree_max+1, degree_max+1))
 
-    for i in range(t_steps):
-        if not isnan(r_hel[i]):
-            nearest_distance_index = (
-                abs(possible_distances - r_hel[i])).argmin()
-            coeff_ext_t[i] = coeff_ext_t_possible[nearest_distance_index]
-        else:
-            coeff_ext_t[i] = nan
+    nearest_distance_index = abs(
+        possible_distances - r_hel[:, newaxis]).argmin(axis=1)
+
+    coeff_ext_t = coeff_ext_t_possible[nearest_distance_index]
 
     print("Finished upscaling the lower resolution Gauss coefficients.")
 
