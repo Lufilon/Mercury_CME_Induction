@@ -22,19 +22,19 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
 
     try:
         # load precalculated data from files if available
-        rikitake_h_re = loadtxt(path + str(resolution) + '_freqnr=' \
+        riki_h_re = loadtxt(path + str(resolution) + '_freqnr=' \
                                 + str(freqnr) + '_h_re.gz')
-        rikitake_h_im = loadtxt(path + str(resolution) + '_freqnr=' \
+        riki_h_im = loadtxt(path + str(resolution) + '_freqnr=' \
                                 + str(freqnr) + '_h_im.gz')
-        rikitake_l_re = loadtxt(path + str(resolution) + '_freqnr=' \
+        riki_l_re = loadtxt(path + str(resolution) + '_freqnr=' \
                                 + str(freqnr) + '_l_re.gz')
-        rikitake_l_im = loadtxt(path + str(resolution) + '_freqnr=' \
+        riki_l_im = loadtxt(path + str(resolution) + '_freqnr=' \
                                 + str(freqnr) + '_l_im.gz')
 
-        rikitake_h_re = rikitake_h_re.reshape((len(gauss_list_ext), freqnr))
-        rikitake_h_im = rikitake_h_im.reshape((len(gauss_list_ext), freqnr))
-        rikitake_l_re = rikitake_l_re.reshape((len(gauss_list_ext), freqnr))
-        rikitake_l_im = rikitake_l_im.reshape((len(gauss_list_ext), freqnr))
+        riki_h_re = riki_h_re.reshape((len(gauss_list_ext), freqnr))
+        riki_h_im = riki_h_im.reshape((len(gauss_list_ext), freqnr))
+        riki_l_re = riki_l_re.reshape((len(gauss_list_ext), freqnr))
+        riki_l_im = riki_l_im.reshape((len(gauss_list_ext), freqnr))
 
         print("Finished importing the real and imag parts of the rikitake " +
               "factor for both conductivity profiles.")
@@ -43,10 +43,10 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
         print("No rikitake calculation for this combination of resolution " +
               "and freqnr was done yet - Starting the calculation.")
         # calculate the rikitake factor
-        rikitake_h_re = zeros((len(gauss_list_ext), t_steps//2 + 1))
-        rikitake_h_im = zeros((len(gauss_list_ext), t_steps//2 + 1))
-        rikitake_l_re = zeros((len(gauss_list_ext), t_steps//2 + 1))
-        rikitake_l_im = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        riki_h_re = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        riki_h_im = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        riki_l_re = zeros((len(gauss_list_ext), t_steps//2 + 1))
+        riki_l_im = zeros((len(gauss_list_ext), t_steps//2 + 1))
 
         for l, m in gauss_list_ext:
             index = gauss_list_ext.index((l, m))
@@ -56,52 +56,45 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
                     result = rikitake_calc(l, freq[index][i], r_arr, sigma_h,
                                            sigma_l)
 
-                    rikitake_h_re[index][i] = result[0]
-                    rikitake_h_im[index][i] = result[1]
-                    rikitake_l_re[index][i] = result[2]
-                    rikitake_l_im[index][i] = result[3]
+                    riki_h_re[index][i] = result[0]
+                    riki_h_im[index][i] = result[1]
+                    riki_l_re[index][i] = result[2]
+                    riki_l_im[index][i] = result[3]
 
         print("Finished calculating the rikitake factor parts.")
 
-        # save for runtime purposes on mulitple runs
-        rikitake_save(resolution, freqnr, rikitake_h_re, rikitake_h_im,
-                      rikitake_l_re, rikitake_l_im, path)
+    # save for runtime purposes on mulitple runs
+    rikitake_save(resolution, freqnr, riki_h_re, riki_h_im,
+                  riki_l_re, riki_l_im, path)
 
-    amp_riki_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
-                           dtype=complex)
-    amp_riki_l = zeros((len(gauss_list_ext), t_steps//2 + 1),
-                           dtype=complex)
-    phase_riki_h = zeros((len(gauss_list_ext), t_steps//2 + 1),
-                             dtype=complex)
-    phase_riki_l = zeros((len(gauss_list_ext), t_steps//2 + 1),
-                             dtype=complex)
+    amp_riki_h = hypot(riki_h_re, riki_h_im)
+    amp_riki_l = hypot(riki_l_re, riki_l_im)
+
+    phase_riki_h = arctan2(riki_h_im, riki_h_re)
+    phase_riki_l = arctan2(riki_l_im, riki_l_re)
+
+    coeff_ext_sec_f_h = coeff_ext_f_amp * amp_riki_h \
+        * exp(0+1j * phase_riki_h)
+    coeff_ext_sec_f_l = coeff_ext_f_amp * amp_riki_l \
+        * exp(0+1j * phase_riki_l)
+
     induced_h = zeros((len(gauss_list_ext), t_steps))
     induced_l = zeros((len(gauss_list_ext), t_steps))
 
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
 
-        phase_riki_h[index] = arctan2(
-            rikitake_h_im[index], rikitake_h_re[index])
-        phase_riki_l[index] = arctan2(
-            rikitake_l_im[index], rikitake_l_re[index])
-
-        amp_riki_h[index] = coeff_ext_f_amp[index] * hypot(
-            rikitake_h_re[index], rikitake_h_im[index]) * exp(
-                0+1j * phase_riki_h[index])
-        amp_riki_l[index] = coeff_ext_f_amp[index] * hypot(
-            rikitake_l_re[index], rikitake_l_im[index]) * exp(
-                0+1j * phase_riki_l[index])
-
         induced_h[index] = rebuild(
-            t, freq[index], amp_riki_h[index], coeff_ext_f_phase[index])
+            t, freq[index], coeff_ext_sec_f_h[index],
+            coeff_ext_f_phase[index])
         induced_l[index] = rebuild(
-            t, freq[index], amp_riki_l[index], coeff_ext_f_phase[index])
+            t, freq[index], coeff_ext_sec_f_l[index],
+            coeff_ext_f_phase[index])
 
     print("Finished performing the inverse FFT of the rikitake modified " +
           "freq-dependant Gauss coefficients.")
 
-    return amp_riki_h, amp_riki_l, phase_riki_h, phase_riki_l, induced_h, induced_l
+    return coeff_ext_sec_f_h, coeff_ext_sec_f_l, amp_riki_h, amp_riki_l, phase_riki_h, phase_riki_l, induced_h, induced_l
 
 
 def rikitake_calc(l, freq, r_arr, sigma_h, sigma_l):
@@ -133,10 +126,10 @@ def rikitake_calc(l, freq, r_arr, sigma_h, sigma_l):
     k_arr_h = sqrt((0-1j * omega * 4E-7 * pi * sigma_h))
     k_arr_l = sqrt((0-1j * omega * 4E-7 * pi * sigma_l))
 
-    rikitake_h = rikitake(l, k_arr_h, r_arr)
-    rikitake_l = rikitake(l, k_arr_l, r_arr)
+    riki_h = rikitake(l, k_arr_h, r_arr)
+    riki_l = rikitake(l, k_arr_l, r_arr)
 
-    return real(rikitake_h), imag(rikitake_h), real(rikitake_l), imag(rikitake_l)
+    return real(riki_h), imag(riki_h), real(riki_l), imag(riki_l)
 
 
 def rikitake(l, k, r):
@@ -295,23 +288,23 @@ def rikitake_transferfunction(l, known_excitements=False, spec_freq=False):
     sigma_h = array([0, 1E7, 1E3, 10**0.5, 10**0.7, 1E-2])
 
     # calculation of the rikitkae factor
-    rikitake_h = array([0+0j] * omega_steps)  # high conductivity
-    rikitake_l = array([0+0j] * omega_steps)  # low conductivity
+    riki_h = array([0+0j] * omega_steps)  # high conductivity
+    riki_l = array([0+0j] * omega_steps)  # low conductivity
 
     for i in range(0, len(omega)):
         k_arr_h = sqrt((0-1j * omega[i] * 4E-7 * pi * sigma_h))
         k_arr_l = sqrt((0-1j * omega[i] * 4E-7 * pi * sigma_l))
 
-        rikitake_h[i] = rikitake(l, k_arr_h, r_arr)
-        rikitake_l[i] = rikitake(l, k_arr_l, r_arr)
+        riki_h[i] = rikitake(l, k_arr_h, r_arr)
+        riki_l[i] = rikitake(l, k_arr_l, r_arr)
 
     # creation of the transfer-function
     fig, ax = plt.subplots()
     ax.set_title("Transfer function for the amplitude of the rikitake factor")
 
-    ax.plot(omega/(2*pi), abs(rikitake_h),
+    ax.plot(omega/(2*pi), abs(riki_h),
              label="$\\sigma_{high}$, $l=" + str(l) + "$", linewidth='2')
-    ax.plot(omega/(2*pi), abs(rikitake_l),
+    ax.plot(omega/(2*pi), abs(riki_l),
              label="$\\sigma_{low}$,  $l=" + str(l) + "$", linewidth='2')
 
     ax.grid(which='major', axis='both', linestyle='-', color='lavender')

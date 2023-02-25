@@ -258,3 +258,7 @@ def SHA_by_integration_calc(theta_arr, phi_arr, num_theta, num_phi, Br, Bt, Bp,
             coeff_ext[l] = ((l+1)*GP_lm_arr[l] - m*GR_lm_arr[l])/((2*l + 1)*m) * (ana_radius/ref_radius)**(-l+1)
 
     return coeff_int, coeff_ext
+
+
+def SHA_by_integration_inverse(gauss_list_ext, theta_arr):
+    

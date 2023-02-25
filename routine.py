@@ -123,15 +123,16 @@ fig_gauss_f, ax_gauss_f_pri = plot_gauss_solo(
     name='gaussian_f_pri.jpeg', sharex=True)
 
 # use the rikitake factor to calculate the secondary gauss coefficients
-amp_riki_h, amp_riki_l, phase_riki_h, phase_riki_l, induced_h, induced_l = rikitake_get(
+coeff_ext_sec_f_h, coeff_ext_sec_f_l, amp_riki_h, amp_riki_l, phase_riki_h, phase_riki_l, induced_h, induced_l = rikitake_get(
     t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices, r_arr, sigma_h,
     sigma_l, t_steps, freqnr, resolution, gauss_list_ext, riki_dir)
 
 # plot the freq dependant secondary gauss coefficients
 ax_gauss_f_sec = plot_gauss_twinx(
-    fig_gauss_f, ax_gauss_f_pri, freq[0, 1:], real(amp_riki_h[:, 1:]),
-    real(amp_riki_l[:, 1:]), gauss_list_ext, ylabel="$A_\\mathrm{sec}$ $[nT]$",
-    loc='upper right', name='gaussian_f_sec.jpeg',
+    fig_gauss_f, ax_gauss_f_pri, freq[0, 1:], real(coeff_ext_sec_f_h[:, 1:]),
+    real(coeff_ext_sec_f_l[:, 1:]), gauss_list_ext,
+    ylabel="$A_\\mathrm{sec}$ $[nT]$", loc='upper right',
+    name='gaussian_f_sec.jpeg',
     title="Primary and secondary Gauss coefficients over freq.", axvline=True)
 
 # plot the time dependant secondary gauss coefficients
@@ -141,17 +142,9 @@ ax_gauss_t_sec = plot_gauss_twinx(
     name='gaussian_t_sec.jpeg',
     title="Primary and secondary Gauss coefficients over time.", axvline=False)
 
-# plot the phase of the rikitake factor
-fig_riki_phase, ax_riki_phase = plot_simple(
-    freq[0, 1:], real(phase_riki_h[:, 1:]), real(phase_riki_l[:, 1:]),
-    gauss_list_ext, xscale='log', yscale='linear', xlabel="$f$ [$Hz$]",
-    ylabel="$\\varphi$ [$rad$]", loc='best',
-    title="Argument of the rikitake factor", name="rikitake_phase.jpeg")
-
 # plot the transferfunction for the amplitude of the rikitake factor
 fig_transfer_1, ax_transfer_1 = rikitake_transferfunction(
     l=1, known_excitements=False, spec_freq=False)
-
 fig_transfer_2, ax_transfer_2 = rikitake_transferfunction(
     l=2, known_excitements=False, spec_freq=False)
 
@@ -159,48 +152,37 @@ fig_transfer_2, ax_transfer_2 = rikitake_transferfunction(
 ax_alpha_1 = rikitake_plot(
     fig_transfer_1, ax_transfer_1, 1, freq[0, 1:], amp_riki_h[0, 1:],
     amp_riki_l[0, 1:], coeff_ext_f_amp[0, 1:])
+ax_alpha_2 = rikitake_plot(
+    fig_transfer_2, ax_transfer_2, 2, freq[1, 1:], amp_riki_h[1, 1:],
+    amp_riki_l[1, 1:], coeff_ext_f_amp[1, 1:])
 
-for l, m in gauss_list_ext:
-    index = gauss_list_ext.index((l, m))
-    rikitake_plot(
-        l, freq[index],
-        hypot(rikitake_h_real[index], rikitake_h_imag[index]),
-        hypot(rikitake_l_real[index], rikitake_l_imag[index]),
-        coeff_ext_f_amp[index], c, d
-    )
+# plot the phase of the rikitake factor
+fig_riki_phase, ax_riki_phase = plot_simple(
+    freq[0, 1:], real(phase_riki_h[:, 1:]), real(phase_riki_l[:, 1:]),
+    gauss_list_ext, xscale='log', yscale='linear', xlabel="$f$ [$Hz$]",
+    ylabel="$\\varphi$ [$rad$]", loc='best',
+    title="Argument of the rikitake factor", name="rikitake_phase.jpeg")
+
+# calcualte and plot the timedelta between the primary and secondary field
+T_h = -phase_riki_h[:, 1:]/(2*pi*freq[:, 1:])/60
+T_l = -phase_riki_l[:, 1:]/(2*pi*freq[:, 1:])/60
+
+fig_riki_timedelta, ax_riki_timedelta = plot_simple(
+    freq[0, 1:], T_h, T_l, gauss_list_ext, xscale='log', yscale='log',
+    xlabel="$f$ [$Hz$]", ylabel="$T$ [$min$]", loc='best',
+    title="Timedelta between primary and secondary field",
+    name="timedelta.jpeg")
+
+"""
+TODO: Hier weiter - führe neue Methoden ein
+"""
+# transform to magnetic field for polar orbit at 400 km over surface for phi=0
+
 
 if False:
-    """
-    TODO
-        noch sehr quick and dirty
-    """
-    # plot the transit time of the induced signal
-    T_h = [real(phase_riki_h[index][1:])/(2*pi*freq[index][1:])
-           for index in range(len(gauss_list_ext))]
-    T_l = [real(phase_riki_l[index][1:])/(2*pi*freq[index][1:])
-           for index in range(len(gauss_list_ext))]
-
-    plt.figure("Transit time of the primary signal")
-    plt.title("Transit time of the secondary signal")
-    plt.plot(freq[0][1:], -T_h[0]/60, label="$\\sigma_{high}$, $g_{10}$")
-    plt.plot(freq[0][1:], -T_l[0]/60, label="$\\sigma_{low}$, $g_{10}$")
-    plt.plot(freq[1][1:], -T_h[1]/60, label="$\\sigma_{high}$, $g_{21}$")
-    plt.plot(freq[1][1:], -T_l[1]/60, label="$\\sigma_{low}$, $g_{21}$")
-
-    plt.xscale('log')
-    # plt.yscale('symlog')
-    plt.yscale('log')
-    # plt.ylim(-2E2, 0.5)
-    plt.xlabel("f [$Hz$]")
-    plt.ylabel("T [$min$]")
-    plt.legend()
-
-    plt.savefig('plots/transit_time_' + str(resolution) + '.jpg', dpi=600)
-
     # transform to magnetic field for polar orbit at 400 km over surface for phi=0
-
-    B_r_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
-    B_theta_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
+    Br_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
+    Bt_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
     B_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
     B_r_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
     B_theta_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
@@ -245,9 +227,9 @@ if False:
         # account for the inner derivative
         dP_lm = dP_lm * (-sin(theta_arr))
 
-        B_r_400_h[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
+        Br_400_h[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
             max(abs(induced_h[index])) * P_lm
-        B_theta_400_h[index] = - (R_M/(R_M+400))**(l+2) * \
+        Bt_400_h[index] = - (R_M/(R_M+400))**(l+2) * \
             max(abs(induced_h[index])) * dP_lm
         B_r_400_l[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
             max(abs(induced_l[index])) * P_lm
@@ -255,16 +237,16 @@ if False:
             max(abs(induced_l[index])) * dP_lm
 
         # for difference plot
-        B_r_400_h[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
+        Br_400_h[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
             abs(max(abs(induced_h[index])) - max(abs(induced_h_phase0[index]))) * P_lm
-        B_theta_400_h[index] = - (R_M/(R_M+400))**(l+2) * \
+        Bt_400_h[index] = - (R_M/(R_M+400))**(l+2) * \
             abs(max(abs(induced_h[index])) - max(abs(induced_h_phase0[index]))) * dP_lm
         B_r_400_l[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
             abs(max(abs(induced_l[index])) - max(abs(induced_l_phase0[index]))) * P_lm
         B_theta_400_l[index] = - (R_M/(R_M+400))**(l+2) * \
             abs(max(abs(induced_l[index])) - max(abs(induced_l_phase0[index]))) * dP_lm
 
-        B_400_h[index] = hypot(B_r_400_h[index], B_theta_400_h[index])
+        B_400_h[index] = hypot(Br_400_h[index], Bt_400_h[index])
         B_400_l[index] = hypot(B_r_400_l[index], B_theta_400_l[index])
 
     fig_400, (ax_400_r, ax_400_theta, ax_400) = plt.subplots(
@@ -282,9 +264,9 @@ if False:
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
 
-        ax_400_r.plot(theta_arr, B_r_400_h[index],
+        ax_400_r.plot(theta_arr, Br_400_h[index],
                       label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-        ax_400_theta.plot(theta_arr, B_theta_400_h[index],
+        ax_400_theta.plot(theta_arr, Bt_400_h[index],
                           label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
         ax_400.plot(theta_arr, B_400_h[index],
                     label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")

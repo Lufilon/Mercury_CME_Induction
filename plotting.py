@@ -18,9 +18,9 @@ def plot_simple(x, y_h, y_l, gauss_list_ext, xscale, yscale, xlabel, ylabel,
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
 
-        ax.plot(x, y_h[index], color='red',
+        ax.plot(x, y_h[index],
                 label="$\\sigma_{high}$, $l=" + str(l) + ", m=" + str(m) + "$")
-        ax.plot(x, y_l[index], color='green',
+        ax.plot(x, y_l[index],
                 label="$\\sigma_{low}$,  $l=" + str(l) + ", m=" + str(m) + "$")
 
     ax.set_xscale(xscale)
