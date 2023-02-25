@@ -21,7 +21,7 @@ from numpy import pi, nan, hypot, exp, sin, cos
 from numpy import array, linspace, zeros, real
 import matplotlib.pyplot as plt
 
-# get time to obtaine the runtime of the routine
+# for measuring the runtime of the routine
 t0 = time()
 
 # =============================================================================
@@ -62,9 +62,6 @@ freqnr = 3601
 r_arr = array([0, 1740E3, 1940E3, 2040E3, 2300E3, 2440E3])
 sigma_h = array([0, 1E7, 1E3, 10**0.5, 10**0.7, 1E-2])
 sigma_l = array([0, 1E5, 1E2, 10**-0.5, 10**-3, 1E-7])
-
-# magnetic field degree for the frequency range rikitake plot
-rikitakedegree = [1, 2]
 
 # relative paths to the directories
 mission_name = 'helios_1'
@@ -151,42 +148,44 @@ fig_riki_phase, ax_riki_phase = plot_simple(
     ylabel="$\\varphi$ [$rad$]", loc='best',
     title="Argument of the rikitake factor", name="rikitake_phase.jpeg")
 
-"""
-TODO: Hier weiter
-"""
-if False:
-    color = iter(plt.cm.prism(linspace(0, 0.5, 4)))
-    # plot transfer function for each degree up to rikitakedegree
-    # including alpha plot for frequencies in given data
-    for i in rikitakedegree:
-        c = next(color)
-        d = next(color)
-        for l, m in gauss_list_ext:
-            if i == l:
-                index = gauss_list_ext.index((l, m))
-                rikitake_plot(
-                    i, f[index],
-                    hypot(rikitake_h_real[index], rikitake_h_imag[index]),
-                    hypot(rikitake_l_real[index], rikitake_l_imag[index]),
-                    coeff_ext_f_amp[index], c, d
-                )
+# plot the transferfunction for the amplitude of the rikitake factor
+fig_transfer_1, ax_transfer_1 = rikitake_transferfunction(
+    l=1, known_excitements=False, spec_freq=False)
 
+fig_transfer_2, ax_transfer_2 = rikitake_transferfunction(
+    l=2, known_excitements=False, spec_freq=False)
+
+# plot the transferfunction with an alpha plot of the data
+ax_alpha_1 = rikitake_plot(
+    fig_transfer_1, ax_transfer_1, 1, freq[0, 1:], amp_riki_h[0, 1:],
+    amp_riki_l[0, 1:], coeff_ext_f_amp[0, 1:])
+
+for l, m in gauss_list_ext:
+    index = gauss_list_ext.index((l, m))
+    rikitake_plot(
+        l, freq[index],
+        hypot(rikitake_h_real[index], rikitake_h_imag[index]),
+        hypot(rikitake_l_real[index], rikitake_l_imag[index]),
+        coeff_ext_f_amp[index], c, d
+    )
+
+if False:
     """
     TODO
         noch sehr quick and dirty
     """
     # plot the transit time of the induced signal
-    T_h = [real(phase_riki_h[index][1:])/(2*pi*f[index][1:])
+    T_h = [real(phase_riki_h[index][1:])/(2*pi*freq[index][1:])
            for index in range(len(gauss_list_ext))]
-    T_l = [real(phase_riki_l[index][1:])/(2*pi*f[index][1:])
+    T_l = [real(phase_riki_l[index][1:])/(2*pi*freq[index][1:])
            for index in range(len(gauss_list_ext))]
 
     plt.figure("Transit time of the primary signal")
     plt.title("Transit time of the secondary signal")
-    plt.plot(f[0][1:], -T_h[0]/60, label="$\\sigma_{high}$, $g_{10}$")
-    plt.plot(f[0][1:], -T_l[0]/60, label="$\\sigma_{low}$, $g_{10}$")
-    plt.plot(f[1][1:], -T_h[1]/60, label="$\\sigma_{high}$, $g_{21}$")
-    plt.plot(f[1][1:], -T_l[1]/60, label="$\\sigma_{low}$, $g_{21}$")
+    plt.plot(freq[0][1:], -T_h[0]/60, label="$\\sigma_{high}$, $g_{10}$")
+    plt.plot(freq[0][1:], -T_l[0]/60, label="$\\sigma_{low}$, $g_{10}$")
+    plt.plot(freq[1][1:], -T_h[1]/60, label="$\\sigma_{high}$, $g_{21}$")
+    plt.plot(freq[1][1:], -T_l[1]/60, label="$\\sigma_{low}$, $g_{21}$")
 
     plt.xscale('log')
     # plt.yscale('symlog')
@@ -417,8 +416,6 @@ if False:
 
 
 print("Time for the Process: " + str(time() - t0) + " seconds.")
-
-plt.close('all')  # closes all figures
 
 
 # fig_400, (ax_400_r, ax_400_theta, ax_400) = plt.subplots(
