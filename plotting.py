@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 10})
 
 
-def plot_simple(x, y_h, y_l, gauss_list_ext, xscale, yscale, xlabel, ylabel,
-                loc, title, name):
+def plot_simple(x, y_h, y_l, gauss_list_ext, xscale, yscale, xlabel,
+                      ylabel, loc, title, name):
     fig, ax = plt.subplots()
     ax.set_title(title)
 

@@ -172,7 +172,7 @@ fig_riki_timedelta, ax_riki_timedelta = plot_simple(
     name="timedelta.jpeg")
 
 """
-TODO: Hier weiter - führe neue Methoden ein
+TODO: Hier weiter
 """
 # transform to magnetic field for polar orbit at 400 km over surface for phi=0
 
@@ -214,9 +214,9 @@ if False:
         amp_riki_l_temp[index] = amp_riki_l[index] * exp(
             0+1j * phase_riki_l_temp[index])
 
-        induced_h_phase0[index] = rebuild(
+        induced_h_phase0[index] = gaussian_f_to_t(
             t, f[index], amp_riki_h_temp[index], phase[index])
-        induced_l_phase0[index] = rebuild(
+        induced_l_phase0[index] = gaussian_f_to_t(
             t, f[index], amp_riki_l_temp[index], phase[index])
 
         P_lm, dP_lm = P_dP(l, m, cos(theta_arr))
@@ -296,11 +296,11 @@ if False:
     plt.subplots_adjust(hspace=0)
     ax_phase_10.set_title("Difference of the time dependant secondary " +
                           "Gauss coefficient using\n solely $f_1$ for " +
-                          "the rebuild using $\\sigma_h$, in- and " + 
+                          "the gaussian_f_to_t using $\\sigma_h$, in- and " + 
                           "excluding phase information")
     # ax_phase_10.set_title("Difference of the time dependant secondary " +
     #                       "Gauss coefficient using\n solely $f_1$ for " +
-    #                       "the rebuild for the high and low conductivity" +
+    #                       "the gaussian_f_to_t for the high and low conductivity" +
     #                       " profiles")
     # ax_phase_10.set_title("Time dependant secondary Gauss coefficient " + 
     #                       "using \n solely $f_1$ in- and excluding the " +
@@ -308,66 +308,66 @@ if False:
 
     # difference for same \sigma
     # ax_phase_10.plot(t_plotting,
-    #                   abs(rebuild(
+    #                   abs(gaussian_f_to_t(
     #                       t, [f[0][1]], [induced_h[0][1]],
-    #                       [phase[0][1]]) - rebuild(
+    #                       [phase[0][1]]) - gaussian_f_to_t(
     #                           t, [f[0][1]], [induced_h_phase0[0][1]],
     #                           [phase[0][1]])),
     #                   label="$g_{10}$, $\\sigma_h$")
     # ax_phase_21.plot(t_plotting,
-    #                   abs(rebuild(
+    #                   abs(gaussian_f_to_t(
     #                       t, [f[1][1]], [induced_h[1][1]],
-    #                       [phase[1][1]]) - rebuild(
+    #                       [phase[1][1]]) - gaussian_f_to_t(
     #                           t, [f[1][1]], [induced_h_phase0[1][1]],
     #                           [phase[1][1]])),
     #                   label="$g_{21}$, $\\sigma_h$")
 
     # ax_phase_10.plot(t_plotting,
-    #                   abs(rebuild(
+    #                   abs(gaussian_f_to_t(
     #                       t, [f[0][1]], [induced_l[0][1]],
-    #                       [phase[0][1]]) - rebuild(
+    #                       [phase[0][1]]) - gaussian_f_to_t(
     #                           t, [f[0][1]], [induced_l_phase0[0][1]],
     #                           [phase[0][1]])),
     #                   label="$g_{10}$, $\\sigma_l$")
     # ax_phase_21.plot(t_plotting,
-    #                   abs(rebuild(
+    #                   abs(gaussian_f_to_t(
     #                       t, [f[1][1]], [induced_l[1][1]],
-    #                       [phase[1][1]]) - rebuild(
+    #                       [phase[1][1]]) - gaussian_f_to_t(
     #                           t, [f[1][1]], [induced_l_phase0[1][1]],
     #                           [phase[1][1]])),
     #                   label="$g_{21}$, $\\sigma_l$")
 
     # ax_phase_10.plot(t_plotting,
-    #                   rebuild(t, [f[0][1]], [induced_h[0][1]],
+    #                   gaussian_f_to_t(t, [f[0][1]], [induced_h[0][1]],
     #                           [phase[0][1]]),
     #                   label="$g_{10}$, $\\sigma_{high}$")
     # ax_phase_10.plot(t_plotting,
-    #                   rebuild(t, [f[0][1]], [induced_h_phase0[0][1]],
+    #                   gaussian_f_to_t(t, [f[0][1]], [induced_h_phase0[0][1]],
     #                           [phase[0][1]]),
     #                   label="$g_{10}$, $\\varphi=0$, $\\sigma_{high}$")
     # ax_phase_21.plot(t_plotting,
-    #                   rebuild(t, [f[1][1]], [induced_h[1][1]],
+    #                   gaussian_f_to_t(t, [f[1][1]], [induced_h[1][1]],
     #                           [phase[1][1]]),
     #                   label="$g_{21}$, $\\sigma_{high}$")
     # ax_phase_21.plot(t_plotting,
-    #                   rebuild(t, [f[1][1]], [induced_h_phase0[1][1]],
+    #                   gaussian_f_to_t(t, [f[1][1]], [induced_h_phase0[1][1]],
     #                           [phase[1][1]]),
     #                   label="$g_{21}$, $\\varphi=0$, $\\sigma_{high}$")
 
     # ax_phase_10.plot(t_plotting,
-    #                   rebuild(t, [f[0][1]], [induced_l[0][1]],
+    #                   gaussian_f_to_t(t, [f[0][1]], [induced_l[0][1]],
     #                           [phase[0][1]]),
     #                   label="$g_{10}$, $\\sigma_{low}$")
     # ax_phase_10.plot(t_plotting,
-    #                   rebuild(t, [f[0][1]], [induced_l_phase0[0][1]],
+    #                   gaussian_f_to_t(t, [f[0][1]], [induced_l_phase0[0][1]],
     #                           [phase[0][1]]),
     #                   label="$g_{10}$, $\\varphi=0$, $\\sigma_{low}$")
     # ax_phase_21.plot(t_plotting,
-    #                   rebuild(t, [f[1][1]], [induced_l[1][1]],
+    #                   gaussian_f_to_t(t, [f[1][1]], [induced_l[1][1]],
     #                           [phase[1][1]]),
     #                   label="$g_{21}$, $\\sigma_{low}$")
     # ax_phase_21.plot(t_plotting,
-    #                   rebuild(t, [f[1][1]], [induced_l_phase0[1][1]],
+    #                   gaussian_f_to_t(t, [f[1][1]], [induced_l_phase0[1][1]],
     #                           [phase[1][1]]),
     #                   label="$g_{21}$, $\\varphi=0$, $\\sigma_{low}$")
 
@@ -386,41 +386,40 @@ if False:
         ax_solo = plt.subplot(len(gauss_list_ext), 1, index + 1)
 
         ax_solo.plot(t_plotting,
-                  rebuild(t, [f[index][1]], [coeff_ext_f_amp[index][1]], [phase[index][1]]),
+                  gaussian_f_to_t(t, [f[index][1]], [coeff_ext_f_amp[index][1]], [phase[index][1]]),
                   label="g" + str(l) + str(m))
         ax_solo.plot(t_plotting,
-                  rebuild(t, [f[index][1]], [coeff_ext_f_amp[index][1]], [0]),
+                  gaussian_f_to_t(t, [f[index][1]], [coeff_ext_f_amp[index][1]], [0]),
                   label="g" + str(l) + str(m) + " $\\varphi=0$")
 
         ax_solo.legend()
 
+    # fig_400, (ax_400_r, ax_400_theta, ax_400) = plt.subplots(
+    #     3, sharex=True)
+    # plt.subplots_adjust(hspace=0)
+    # ax_400_r.set_title("Difference of the time dependant secondary " +
+    #                       "Gauss coefficient using\n solely $f_1$ for " +
+    #                       "the gaussian_f_to_t using $\\sigma_h$, in- and " + 
+    #                       "excluding phase information\n for resolution 100 and 200")
+
+    # for l, m in gauss_list_ext:
+    #     index = gauss_list_ext.index((l, m))
+
+    #     ax_400_r.plot(theta_arr, A1[index] - B1[index],
+    #                   label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
+    #     ax_400_theta.plot(theta_arr, abs(A2[index] - B2[index]),
+    #                       label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
+    #     ax_400.plot(theta_arr, A3[index] - B3[index],
+    #                 label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
+    #     ax_400_r.plot(theta_arr, A4[index] - B4[index],
+    #                   label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
+    #     ax_400_theta.plot(theta_arr, A5[index] - B5[index],
+    #                       label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
+    #     ax_400.plot(theta_arr, A6[index] - B6[index],
+    #                 label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
+
+    # fig_400.savefig(
+    #     'plots/400km_resolution.jpg', dpi=60)
+
 
 print("Time for the Process: " + str(time() - t0) + " seconds.")
-
-
-# fig_400, (ax_400_r, ax_400_theta, ax_400) = plt.subplots(
-#     3, sharex=True)
-# plt.subplots_adjust(hspace=0)
-# ax_400_r.set_title("Difference of the time dependant secondary " +
-#                       "Gauss coefficient using\n solely $f_1$ for " +
-#                       "the rebuild using $\\sigma_h$, in- and " + 
-#                       "excluding phase information\n for resolution 100 and 200")
-
-# for l, m in gauss_list_ext:
-#     index = gauss_list_ext.index((l, m))
-
-#     ax_400_r.plot(theta_arr, A1[index] - B1[index],
-#                   label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-#     ax_400_theta.plot(theta_arr, abs(A2[index] - B2[index]),
-#                       label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-#     ax_400.plot(theta_arr, A3[index] - B3[index],
-#                 label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-#     ax_400_r.plot(theta_arr, A4[index] - B4[index],
-#                   label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
-#     ax_400_theta.plot(theta_arr, A5[index] - B5[index],
-#                       label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
-#     ax_400.plot(theta_arr, A6[index] - B6[index],
-#                 label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
-
-# fig_400.savefig(
-#     'plots/400km_resolution.jpg', dpi=600)
