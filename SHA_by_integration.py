@@ -260,5 +260,5 @@ def SHA_by_integration_calc(theta_arr, phi_arr, num_theta, num_phi, Br, Bt, Bp,
     return coeff_int, coeff_ext
 
 
-def SHA_by_integration_inverse(gauss_list_ext, theta_arr):
+# def SHA_by_integration_inverse(gauss_list_ext, theta_arr):
     

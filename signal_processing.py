@@ -63,9 +63,34 @@ def gaussian_t_to_f(coeff_ext_t, t, t_steps, gauss_list_ext, freqnr):
     return freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices
 
 
-def gaussian_f_to_t():
-    """TODO"""
-    return 0
+def gaussian_f_to_t(t, freq, amp, phase):
+    """
+    Transforms a given signal in the frequency domaine to the time domaine.
+    Is equal to the inverse fourier transform but frequencies can be sampled.
+
+    Parameters
+    ----------
+    t : numpy.ndarray.int
+        Time since start in seconds.
+    freq : numpy.ndarray.float64
+        Frequency of the fourier transformed signal.
+    amp : numpy.ndarray.float64
+        Amplitude of the fourier transformed signal.
+    phase : numpy.ndarray.float64
+        Phase of the fourier transformed signal.
+
+    Returns
+    -------
+    data_rebuild : numpy.ndarray.float64
+        Fourier transform of the input signal in the time domaine.
+
+    """
+    # rebuild the initial signal with a reduced amount of frequencies.
+    data_rebuild = amp[:, newaxis] * exp(0+1j * (2 * pi * dot(
+        freq[:, newaxis], t[newaxis, :]) + phase[:, newaxis]))
+    data_rebuild = real(data_rebuild).sum(axis=0)
+
+    return data_rebuild
 
 
 def fft_own(t, data, N):
@@ -102,33 +127,3 @@ def fft_own(t, data, N):
     phase = angle(data_fft)
 
     return freq, amp, phase
-
-
-def rebuild(t, freq, amp, phase):
-    """
-    Transforms a given signal in the frequency domaine to the time domaine.
-    Is equal to the inverse fourier transform but frequencies can be sampled.
-
-    Parameters
-    ----------
-    t : numpy.ndarray.int
-        Time since start in seconds.
-    freq : numpy.ndarray.float64
-        Frequency of the fourier transformed signal.
-    amp : numpy.ndarray.float64
-        Amplitude of the fourier transformed signal.
-    phase : numpy.ndarray.float64
-        Phase of the fourier transformed signal.
-
-    Returns
-    -------
-    data_rebuild : numpy.ndarray.float64
-        Fourier transform of the input signal in the time domaine.
-
-    """
-    # rebuild the initial signal with a reduced amount of frequencies.
-    data_rebuild = amp[:, newaxis] * exp(0+1j * (2 * pi * dot(
-        freq[:, newaxis], t[newaxis, :]) + phase[:, newaxis]))
-    data_rebuild = real(data_rebuild).sum(axis=0)
-
-    return data_rebuild

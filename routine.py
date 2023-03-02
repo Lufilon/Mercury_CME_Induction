@@ -12,13 +12,11 @@ from magnetic_field import magnetic_field_get
 from SHA_by_integration import SHA_by_integration_get
 from signal_processing import gaussian_t_to_f, gaussian_f_to_t
 from rikitake import rikitake_get, rikitake_plot, rikitake_transferfunction
-from legendre_polynomials import P_dP
 from plotting import plot_simple, plot_gauss_solo, plot_gauss_twinx
 
 # third party packages
 from time import time
-from numpy import pi, nan, hypot, exp, sin, cos
-from numpy import array, linspace, zeros, real
+from numpy import pi, nan, hypot, exp, sin, cos, array, zeros, real
 import matplotlib.pyplot as plt
 
 # for measuring the runtime of the routine
@@ -426,5 +424,3 @@ print("Time for the Process: " + str(time() - t0) + " seconds.")
 
 # fig_400.savefig(
 #     'plots/400km_resolution.jpg', dpi=600)
-
-# transferfunction(2)
