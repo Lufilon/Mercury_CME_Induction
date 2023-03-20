@@ -70,7 +70,7 @@ def gaussian_f_to_t(t, freq, amp, phase):
 
     Parameters
     ----------
-    t : numpy.ndarray.int
+    t : numpy.ndarray.float64
         Time since start in seconds.
     freq : numpy.ndarray.float64
         Frequency of the fourier transformed signal.

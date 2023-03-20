@@ -5,7 +5,7 @@ Created on Wed Oct  5 15:31:16 2022
 @author: Luis-
 """
 
-from signal_processing import rebuild
+from signal_processing import gaussian_f_to_t
 from plotting import plot_savefig
 import matplotlib.pyplot as plt
 from numpy import pi, exp, sqrt, real, imag, log10
@@ -63,9 +63,9 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
 
         print("Finished calculating the rikitake factor parts.")
 
-    # save for runtime purposes on mulitple runs
-    rikitake_save(resolution, freqnr, riki_h_re, riki_h_im,
-                  riki_l_re, riki_l_im, path)
+        # save for runtime purposes on mulitple runs
+        rikitake_save(resolution, freqnr, riki_h_re, riki_h_im,
+                      riki_l_re, riki_l_im, path)
 
     amp_riki_h = hypot(riki_h_re, riki_h_im)
     amp_riki_l = hypot(riki_l_re, riki_l_im)
@@ -84,10 +84,10 @@ def rikitake_get(t, freq, coeff_ext_f_amp, coeff_ext_f_phase, rel_indices,
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))
 
-        induced_h[index] = rebuild(
+        induced_h[index] = gaussian_f_to_t(
             t, freq[index], coeff_ext_sec_f_h[index],
             coeff_ext_f_phase[index])
-        induced_l[index] = rebuild(
+        induced_l[index] = gaussian_f_to_t(
             t, freq[index], coeff_ext_sec_f_l[index],
             coeff_ext_f_phase[index])
 

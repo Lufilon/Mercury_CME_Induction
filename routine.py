@@ -10,9 +10,10 @@ from data_input import data_get
 from angular_data import angular_data
 from magnetic_field import magnetic_field_get
 from SHA_by_integration import SHA_by_integration_get
-from signal_processing import gaussian_t_to_f, gaussian_f_to_t
+from signal_processing import gaussian_t_to_f
 from rikitake import rikitake_get, rikitake_plot, rikitake_transferfunction
 from plotting import plot_simple, plot_gauss_solo, plot_gauss_twinx
+from orbit import orbit
 
 # third party packages
 from time import time
@@ -171,122 +172,21 @@ fig_riki_timedelta, ax_riki_timedelta = plot_simple(
     title="Timedelta between primary and secondary field",
     name="timedelta.jpeg")
 
-"""
-TODO: Hier weiter
-"""
-# transform to magnetic field for polar orbit at 400 km over surface for phi=0
+# calculate and plot the induced magnetic field for a 400km orbit
+fig_400km, ax_400km, Br_h, Bt_h, Br_l, Bt_l = orbit(
+    t, freq, gauss_list_ext, theta_arr, coeff_ext_sec_f_h, coeff_ext_sec_f_l,
+    coeff_ext_f_phase, phase_riki_h, phase_riki_l, induced_h, induced_l,
+    height=400, R_M=2440, case="orbit")
+
+# calculate and plot the difference for the induced magnetic field for a 400km
+# orbit in- and excluding the phase of the rikitakefactor for the lowest freq
+fig_400km_diff, ax_400km_diff, Br_h_diff, Bt_h_diff, Br_l_diff, Bt_l_diff = orbit(
+    t, freq, gauss_list_ext, theta_arr, coeff_ext_sec_f_h, coeff_ext_sec_f_l,
+    coeff_ext_f_phase, phase_riki_h, phase_riki_l, induced_h, induced_l,
+    height=400, R_M=2440, case="orbit_diff")
 
 
 if False:
-    # transform to magnetic field for polar orbit at 400 km over surface for phi=0
-    Br_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
-    Bt_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
-    B_400_h = zeros((len(gauss_list_ext), len(theta_arr)))
-    B_r_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
-    B_theta_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
-    B_400_l = zeros((len(gauss_list_ext), len(theta_arr)))
-
-    phase_riki_h_temp = phase_riki_h.copy()
-    phase_riki_l_temp = phase_riki_l.copy()
-
-    amp_riki_h_temp = amp_riki_h.copy()
-    amp_riki_l_temp = amp_riki_l.copy()
-
-    induced_h_phase0 = induced_h.copy()
-    induced_l_phase0 = induced_l.copy()
-
-    for l, m in gauss_list_ext:
-        index = gauss_list_ext.index((l, m))
-
-    # for the magnetic field conductivity difference plot
-        phase_riki_h_temp[index] = phase_riki_h[index].copy()
-        phase_riki_h_temp[index][1] = 0
-        phase_riki_l_temp[index] = phase_riki_l[index].copy()
-        phase_riki_l_temp[index][1] = 0
-
-        amp_riki_h_temp[index] = coeff_ext_f_amp[index] * hypot(
-            rikitake_h_real[index], rikitake_h_imag[index])
-        amp_riki_h_temp[index] = amp_riki_h[index] * exp(
-            0+1j * phase_riki_h_temp[index])
-
-        amp_riki_l_temp[index] = coeff_ext_f_amp[index] * hypot(
-            rikitake_l_real[index], rikitake_l_imag[index])
-        amp_riki_l_temp[index] = amp_riki_l[index] * exp(
-            0+1j * phase_riki_l_temp[index])
-
-        induced_h_phase0[index] = gaussian_f_to_t(
-            t, f[index], amp_riki_h_temp[index], phase[index])
-        induced_l_phase0[index] = gaussian_f_to_t(
-            t, f[index], amp_riki_l_temp[index], phase[index])
-
-        P_lm, dP_lm = P_dP(l, m, cos(theta_arr))
-        dP_lm[0] = nan  # fragment caused by legendre polynomial
-
-        # account for the inner derivative
-        dP_lm = dP_lm * (-sin(theta_arr))
-
-        Br_400_h[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
-            max(abs(induced_h[index])) * P_lm
-        Bt_400_h[index] = - (R_M/(R_M+400))**(l+2) * \
-            max(abs(induced_h[index])) * dP_lm
-        B_r_400_l[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
-            max(abs(induced_l[index])) * P_lm
-        B_theta_400_l[index] = - (R_M/(R_M+400))**(l+2) * \
-            max(abs(induced_l[index])) * dP_lm
-
-        # for difference plot
-        Br_400_h[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
-            abs(max(abs(induced_h[index])) - max(abs(induced_h_phase0[index]))) * P_lm
-        Bt_400_h[index] = - (R_M/(R_M+400))**(l+2) * \
-            abs(max(abs(induced_h[index])) - max(abs(induced_h_phase0[index]))) * dP_lm
-        B_r_400_l[index] = (l+1) * (R_M/(R_M+400))**(l+2) * \
-            abs(max(abs(induced_l[index])) - max(abs(induced_l_phase0[index]))) * P_lm
-        B_theta_400_l[index] = - (R_M/(R_M+400))**(l+2) * \
-            abs(max(abs(induced_l[index])) - max(abs(induced_l_phase0[index]))) * dP_lm
-
-        B_400_h[index] = hypot(Br_400_h[index], Bt_400_h[index])
-        B_400_l[index] = hypot(B_r_400_l[index], B_theta_400_l[index])
-
-    fig_400, (ax_400_r, ax_400_theta, ax_400) = plt.subplots(
-        3, sharex=True)
-    plt.subplots_adjust(hspace=0)
-    ax_400_r.set_title("Magnetic field components for polar orbit with " +
-                        "$\\varphi = 0$ in $R_\\mathrm{M}+400 km$")
-    # ax_400_r.set_title("Difference of magnetic field components for " +
-    #                    "$\\sigma_h$ and $\\sigma_l$\n for polar orbit with" +
-    #                    " $\\varphi = 0$ in $R_\\mathrm{M} + 400 km$")
-    # ax_400_r.set_title("Difference of magnetic field components for " +
-    #                     "$\\sigma_h$ and $\\sigma_l$\n caused by in- and" +
-    #                     " excluding the phase information for $f_1$")
-
-    for l, m in gauss_list_ext:
-        index = gauss_list_ext.index((l, m))
-
-        ax_400_r.plot(theta_arr, Br_400_h[index],
-                      label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-        ax_400_theta.plot(theta_arr, Bt_400_h[index],
-                          label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-        ax_400.plot(theta_arr, B_400_h[index],
-                    label="$g_{" + str(l) + str(m) + "}$, $\\sigma_h$")
-        ax_400_r.plot(theta_arr, B_r_400_l[index],
-                      label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
-        ax_400_theta.plot(theta_arr, B_theta_400_l[index],
-                          label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
-        ax_400.plot(theta_arr, B_400_l[index],
-                    label="$g_{" + str(l) + str(m) + "}$, $\\sigma_l$")
-
-
-    ax_400_r.set_ylabel("$B_r$ [$nT$]")
-    ax_400_theta.set_ylabel("$B_\\vartheta$ [$nT$]")
-    ax_400.set_ylabel("$|B|$ [$nT$]")
-    ax_400_r.legend(fontsize='small')
-    ax_400_theta.legend(fontsize='small')
-    ax_400.legend(fontsize='small')
-    ax_400.set_xlabel("$\\vartheta$ [$rad$]")
-
-    fig_400.savefig(
-        'plots/400km_orbit_' + str(resolution) + '.jpg', dpi=600)
-
     # is it possible to get the phase information from the data?
     """
     TODO
