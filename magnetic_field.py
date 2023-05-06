@@ -61,8 +61,8 @@ def magnetic_field_get(possible_distances, R_ss, theta, phi, num_theta, num_phi,
 
     """
     try:
-        print("If available import precalculated magnetic field components " +
-              "with resolution=" + str(resolution) + " from file.")
+        print("Import precalculated magnetic field components with " +
+              "resolution=" + str(resolution) + " from file.")
         num_pts = num_theta * num_phi
 
         Br_possible = loadtxt(path + '_Br.gz')

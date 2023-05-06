@@ -162,7 +162,7 @@ fig_riki_phase, ax_riki_phase = plot_simple(
     ylabel="$\\varphi$ [$rad$]", loc='best',
     title="Argument of the rikitake factor", name="rikitake_phase.jpeg")
 
-# calcualte and plot the timedelta between the primary and secondary field
+# calculate and plot the timedelta between the primary and secondary field
 T_h = -phase_riki_h[:, 1:]/(2*pi*freq[:, 1:])/60
 T_l = -phase_riki_l[:, 1:]/(2*pi*freq[:, 1:])/60
 
@@ -185,15 +185,37 @@ fig_400km_diff, ax_400km_diff, Br_h_diff, Bt_h_diff, Br_l_diff, Bt_l_diff = orbi
     coeff_ext_f_phase, phase_riki_h, phase_riki_l, induced_h, induced_l,
     height=400, R_M=2440, case="orbit_diff")
 
+# plot the effect of a single rikitakefactor phase on the gauss coefficient
+"""
+TODO
+    Works only for len(gauss_list_ext) = 2
+"""
+# create new arrays to modify
+coeff_ext_sec_f_h_copy = coeff_ext_sec_f_h.copy()
+coeff_ext_sec_f_l_copy = coeff_ext_sec_f_l.copy()
+
+# get rid of the phase of the rikitakefactor for the lowest frequency
+coeff_ext_sec_f_h_copy[:, 1] = coeff_ext_sec_f_h[:, 1]/exp(0+1j * phase_riki_h[:, 1])
+coeff_ext_sec_f_l_copy[:, 1] = coeff_ext_sec_f_l[:, 1]/exp(0+1j * phase_riki_l[:, 1])
+
+"""
+Geht so noch nicht, brauche da noch eine weiter Plotting funktion, oder ich
+muss solo so verändern, dass high und low zugelassen ist
+"""
+
+fig_riki_freq_effect, ax_riki_freq_effect = plot_gauss_solo(
+    t_plotting, y, gauss_list_ext, xscale=None, yscale='linear',
+    xlabel=None, ylabel="$A_\\mathrm{pri}$ $[nT]$", loc='lower left',
+    title="Difference of the time dependant secondary Gauss coefficient " +
+    "using\n solely $f_1$ for the gaussian_f_to_t using $\\sigma_h$, in- and" + 
+    " excluding phase information", name="riki_freq_effect.jpeg", sharex=True)
+    
+abs(gaussian_f_to_t(t, [f[0][1]], [induced_h[0][1]],
+                      [phase[0][1]]) - gaussian_f_to_t(
+                          t, [f[0][1]], [induced_h_phase0[0][1]],
+                          [phase[0][1]]))
 
 if False:
-    # is it possible to get the phase information from the data?
-    """
-    TODO
-        Works only for len(gauss_list_ext) = 2
-    """
-    fig_phase, (ax_phase_10, ax_phase_21) = plt.subplots(2, sharex=True)
-    plt.subplots_adjust(hspace=0)
     ax_phase_10.set_title("Difference of the time dependant secondary " +
                           "Gauss coefficient using\n solely $f_1$ for " +
                           "the gaussian_f_to_t using $\\sigma_h$, in- and " + 
@@ -270,15 +292,6 @@ if False:
     #                   gaussian_f_to_t(t, [f[1][1]], [induced_l_phase0[1][1]],
     #                           [phase[1][1]]),
     #                   label="$g_{21}$, $\\varphi=0$, $\\sigma_{low}$")
-
-    ax_phase_10.legend()
-    ax_phase_21.legend()
-
-    ax_phase_10.set_ylabel("$A$ [$nT$]")
-    ax_phase_21.set_ylabel("$A$ [$nT$]")
-
-    fig_phase.savefig(
-        'plots/single_freq_rebuild_' + str(resolution) + '.jpg', dpi=600)
 
     for l, m in gauss_list_ext:
         index = gauss_list_ext.index((l, m))

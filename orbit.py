@@ -52,8 +52,8 @@ def orbit(t, freq, gauss_list_ext, theta_arr, coeff_ext_sec_f_h,
                 coeff_ext_f_phase[index])
 
         induced_h_temp = induced_h - induced_h_copy
-        print(max(abs(induced_h_temp[0])))
-        print(max(abs(induced_h_temp[1])))
+        # print(max(abs(induced_h_temp[0])))
+        # print(max(abs(induced_h_temp[1])))
         induced_l_temp = induced_l - induced_l_copy
 
     elif case!="orbit":
