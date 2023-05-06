@@ -5,6 +5,66 @@ Created on Tue Sep 13 10:24:28 2022
 @author: Luis-
 """
 
+
+"""
+This routine takes a timeseries of solarwind parameters (particle density N_p
+and velocity v) and computes the induced magnetic field via a transferfunction
+known as the rikitakefactor. The primary magnetic field is computed using the
+KTH22-model, currently monitored by Daniel Heyner and Kristin Pump of the IGEP.
+
+Parameters - input of data
+----------
+mission_name, String
+    Name of the mission where the data is taken from, e.g. "Helios1".
+file_name, String
+    Name of the ".txt" file containing the data.
+empty_rows, int
+    Number of rows to skip in ".txt" file, e.g. the header.
+resolution : int
+    Number of heliocentric distances used. Lower for runtime improvements.
+
+Parameters - runtime
+----------
+num_theta : int
+    Number of samples for lattitude.
+phi_theta : int
+    Number of samples for longitude.
+degree_max, int
+    Number of maximal degree for the Gauss coefficients to be analyzed.
+freqnr, int
+    Number of frequencies to be used for the IFFT.
+
+Parameters - model
+----------
+ref_radius, int
+    Radius of the reference shell.
+ana_radius
+    Radius of the analysis shell where the magnetic field is calculated at.
+gauss_list_ext, list.tuple.int
+    List with tuples of Gauss coefficients (l, m) with degree l and order m.
+r_arr, numpy.ndarray.float64
+    Array containing the radii for the planetary model.
+sigma_h, numpy.ndarray.float64
+    Array containing the high conductivity profile for the planetary model.
+sigma_l, numpy.ndarray.float64
+    Array containing the low conductivity profile for the planetary model.
+
+Parameters - KTH22
+----------
+dipole, boolean
+    Include internal dipole of planet mercury.
+neutralsheet, boolean
+    Include the neutralsheet current of planet mercury.
+internal, boolean
+    Inlcude the internal field caused by the selected current systems.
+external, boolean
+    Inlcude the external field caused by the selected current systems.
+di_val, int
+    Value for the disturbance index, ranges between [0, 100].
+    Default is 50.
+"""
+
+
 # own packages
 from data_input import data_get
 from angular_data import angular_data

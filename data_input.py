@@ -27,7 +27,7 @@ def data_get(path, empty_rows, resolution, plot=False):
         Rows to skip in data file.
     resolution : int
         Number of distances for which the magnetic field is calculated for.
-    plot : TYPE, boolean
+    plot : boolean
         Plot the data and subsolar standoff distance if required.
         The default is False.
 
