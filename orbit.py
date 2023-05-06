@@ -28,6 +28,8 @@ def orbit(t, freq, gauss_list_ext, theta_arr, coeff_ext_sec_f_h,
         induced_h_temp = induced_h
         induced_l_temp = induced_l
 
+        title = f"Magnetic field for {height} km orbit with $\\varphi = 0$"
+
     if case=="orbit_diff":
         # create new arrays to modify
         coeff_ext_sec_f_h_copy = coeff_ext_sec_f_h.copy()
@@ -56,6 +58,9 @@ def orbit(t, freq, gauss_list_ext, theta_arr, coeff_ext_sec_f_h,
         # print(max(abs(induced_h_temp[1])))
         induced_l_temp = induced_l - induced_l_copy
 
+        title = f"Diff in magnetic field for {height} km orbit with $\\varphi"
+        title += " = 0$\n when in- and excluding rikitake phase for $f_1$"
+
     elif case!="orbit":
         print("Not a valid case for the orbit plot. \n" + 
               "Valid cases at the moment are 'orbit' and 'orbit_diff'.")
@@ -65,8 +70,7 @@ def orbit(t, freq, gauss_list_ext, theta_arr, coeff_ext_sec_f_h,
                                         gauss_list_ext, R_M, orbit_height)
 
     fig, ax = orbit_plot(gauss_list_ext, theta_arr, Br_h, Bt_h, Br_l, Bt_l,
-                          "Magnetic field for " + str(height) + " km orbit " +
-                          "with $\\varphi = 0$", '$\\vartheta$ [$rad$]',
+                          title, '$\\vartheta$ [$rad$]',
                           '$B_r$ [$nT$]', '$B_\\vartheta$ [$nT$]',
                           '$|B|$ [$nT$]', f"{height}km_orbit_{case}")
 
@@ -133,5 +137,5 @@ def orbit_plot(gauss_list_ext, theta_arr, Br_h, Bt_h, Br_l, Bt_l, title,
     ax[2].legend(fontsize='small')
 
     plot_savefig(fig, 'plots/', name, dpi=600)
-    
+
     return fig, ax

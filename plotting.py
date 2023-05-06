@@ -11,7 +11,7 @@ plt.rcParams.update({'font.size': 10})
 
 
 def plot_simple(x, y_h, y_l, gauss_list_ext, xscale, yscale, xlabel,
-                      ylabel, loc, title, name):
+                ylabel, loc, title, name):
     fig, ax = plt.subplots()
     ax.set_title(title)
 
@@ -87,6 +87,7 @@ def plot_gauss_twinx(fig_pri, ax_pri, x, y_h, y_l, gauss_list_ext, ylabel,
     plot_savefig(fig_pri, 'plots/', name, 600)
 
     return ax_sec
+
 
 
 def plot_savefig(fig, path, name, dpi=600):
