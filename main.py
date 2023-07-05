@@ -7,6 +7,9 @@ Created on Tue Sep 13 10:24:28 2022
 
 
 """
+Main file for the calculation of the induction effect of a coronal mass ejec-
+tion on planet Mercury used for the bachelor thesis "Induktionswirkung eines
+koronalen Massenauswurfs auf den Planeten Merkur" by Luis Langermann.
 This routine takes a timeseries of solarwind parameters (particle density N_p
 and velocity v) and computes the induced magnetic field via a transferfunction
 known as the rikitakefactor. The primary magnetic field is computed using the
