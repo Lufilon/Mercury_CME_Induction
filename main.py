@@ -24,7 +24,7 @@ file_name, String
 empty_rows, int
     Number of rows to skip in ".txt" file, e.g. the header.
 resolution : int
-    Number of heliocentric distances used. Lower for runtime improvements.
+    Number of heliocentric distances used. Lower for runtime purposes.
 
 Parameters - runtime
 ----------
