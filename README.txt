@@ -1,12 +1,5 @@
-Code used in the bachelor thesis "Induktionseffekt eines koronalen Massenauswurfs auf den Planeten Merkur" by Luis Langermann. The code uses solar wind
-parameters (solar wind density and velocity) to calculate the induced, secondary magnetic field from the inducing, primary field using a model of the
-interior of planet Mercury and a model of the magnetosphere, the KTH22-model currently monitored by Daniel Heyner and Kristin Pump of the IGEP.
+Code used in the bachelor thesis "Induktionseffekt eines koronalen Massenauswurfs auf den Planeten Merkur" by Luis Langermann. The code uses solar wind parameters (solar wind density and velocity) to calculate the induced, secondary magnetic field from the inducing, primary field using a model of the interior of planet Mercury and a model of the magnetosphere, the KTH22-model currently monitored by Daniel Heyner and Kristin Pump of the IGEP.
 
-Set parameters and run routine from "main.py". The solar wind data is taken from "/data/mission/file_name.txt", where "mission" and "file_name" are set in
-the "main.py". The default is "mission"=helios_1 and "file_name"=output-helios1_e1_np_helios1_e1_vp_0_1_2_1980148000000000. The .txt file needs to contain
-a time series, solar wind density and velocity components, e.g. see the default file. The folder "data/runtime/" is used for runtime purposes after the first
-usage of the routine. Using the "neutralsheet" parameter in the "main.py" one can control if the neutralsheet current is included in the KTH22-model, we
-therefore distinguish further between "ns=True" or "ns=False". Every "mission/" folder, e.g. "helios_1/", contains a "gaussian_t/", "magnetic/" and
-"rikitake/" folder for runtime improvements. All plots are saved in the "plots/" folder.
+Set parameters and run routine from "main.py". The solar wind data is taken from "/data/mission/file_name.txt", where "mission" and "file_name" are set in the "main.py". The default is "mission"=helios_1 and "file_name"=output-helios1_e1_np_helios1_e1_vp_0_1_2_1980148000000000. The .txt file needs to contain a time series, solar wind density and velocity components, e.g. see the default file. The folder "data/runtime/" is used for runtime purposes after the first usage of the routine. Using the "neutralsheet" parameter in the "main.py" one can control if the neutralsheet current is included in the KTH22-model, we therefore distinguish further between "ns=True" or "ns=False". Every "mission/" folder, e.g. "helios_1/", contains a "gaussian_t/", "magnetic/" and "rikitake/" folder for runtime improvements. All plots are saved in the "plots/" folder.
 
 Other ".py" files are used to carry out the calculations, packaging might get introduced in a later version.
